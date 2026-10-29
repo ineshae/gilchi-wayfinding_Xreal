@@ -885,18 +885,23 @@ function prepNotes(){
   const ch=R.CH[R.STAGE.song].charts[R.DIFF];
   G.notes=ch.map(([t,type],i)=>({ i, t, type, kind:type[0], side:type==='L'?-1:type==='R'?1:type==='B'?0:(type==='TR'?1:-1), s:sOf(t)+H().ahead, judged:false, obj:null, hitL:null, hitR:null, fly:null }));
   G.turnsN=G.notes.filter(n=>n.kind==='T').length;
+  // each item pops out ON a beat of the song: the last real beat that leaves at least LEAD seconds before you hit it
+  const B=R.CH[R.STAGE.song].beats, LEAD=G.vr?1.0:.95;
+  G.notes.forEach(n=>{ const target=n.t-LEAD; let lo=0, hi=B.length-1, best=-1; while (lo<=hi){ const m=(lo+hi)>>1; if (B[m]<=target){ best=m; lo=m+1; } else hi=m-1; }
+    n.pop=best>=0 && target-B[best]<.8 ? B[best] : target; n.popped=false; });
   G.live=[]; G.nextIdx=0;
 }
 function notePos(n,out){
   const h=H(), lat=n.kind==='B'?0:n.side*h.lat, q=lateral(n.s,lat);
   out.set(q.x, n.kind==='B'?h.y+.3:n.kind==='T'?h.y+.25:h.y, q.z); return q.a;
 }
+const reduceFx=()=>R.reduceMotion;
 const easeOutBack=x=>{ const c1=1.4, c3=c1+1; return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2); };
 const V=new T.Vector3();
 function updateNotes(t,dt){
   const w=W(), h=H();
   // spawn
-  while (G.nextIdx<G.notes.length && G.notes[G.nextIdx].t-t<2.0){ const n=G.notes[G.nextIdx++]; n.obj=R.makeNote(R.STAGE,n,n.i); world.add(n.obj); G.live.push(n); }
+  while (G.nextIdx<G.notes.length && G.notes[G.nextIdx].pop-t<.4){ const n=G.notes[G.nextIdx++]; n.obj=R.makeNote(R.STAGE,n,n.i); world.add(n.obj); G.live.push(n); }
   for (let k=G.live.length-1;k>=0;k--){
     const n=G.live[k], o=n.obj, u=o.userData, dtn=n.t-t;
     if (n.fly){ // knocked away
@@ -904,18 +909,21 @@ function updateNotes(t,dt){
       const k2=1-n.fly.t/.6; u.glow.material.opacity=Math.max(0,k2)*.8; u.ring.visible=false; o.scale.setScalar(Math.max(.01,k2*1.1+.1));
       if (n.fly.t>.6){ world.remove(o); G.live.splice(k,1); n.obj=null; } continue; }
     const a=notePos(n,V);
-    // pop out of the side: slide in from beyond the corridor edge, rise up, then wait at the hit spot
-    const popK=clamp((2.0-dtn)/1.25,0,1), e=easeOutBack(popK);
+    // POP! exactly on a beat: jump out of the side in 0.2 s, then hop to every beat until you hit it
+    const popK=clamp((t-n.pop)/.2,0,1), e=easeOutBack(popK);
+    o.visible=t>=n.pop;
+    if (t>=n.pop && !n.popped){ n.popped=true; if (!reduceFx()) { notePos(n,V); R.burst(V.clone().setY(V.y-.3),u.col,7); } }
     const edge=(R.STAGE.width/2+1.4)*(n.side||0), r=rgt(a);
     const base=pAt(n.s), lat0=n.kind==='B'?0:edge, latNow=lat0+(((n.kind==='B'?0:n.side*h.lat))-lat0)*e;
     const ey=1-clamp(e,0,1);
-    o.position.set(base.x+r[0]*latNow, V.y+(n.kind==='B'?ey*2.6:-ey*.7), base.z+r[1]*latNow);
-    o.rotation.y=-a; const sc=clamp(popK*3,0,1)*(n.judged&&n.res!=='miss'?1:clamp(1+(dtn+.05)/.3,0,1)); o.scale.setScalar(sc*(G.vr?.75:.82));
-    u.body.rotation.y=Math.sin(t*2+n.i)*.5; u.body.position.y=BEAT.pulse*.07; u.body.scale.setScalar(1+BEAT.pulse*.12);
+    o.position.set(base.x+r[0]*latNow, V.y+(n.kind==='B'?ey*2.6:-ey*.7+Math.sin(Math.PI*popK)*.45), base.z+r[1]*latNow);
+    o.rotation.y=-a; const sc=Math.max(0,e)*(n.judged&&n.res!=='miss'?1:clamp(1+(dtn+.05)/.3,0,1)); o.scale.setScalar(sc*(G.vr?.75:.82));
+    const hop=popK>=1?BEAT.pulse:0;
+    u.body.rotation.y=Math.sin(t*2+n.i)*.5; u.body.position.y=hop*.16; u.body.scale.set(1-hop*.08,1+hop*.2,1-hop*.08);
     if (u.body.userData.wings) u.body.userData.wings.forEach((wg,j)=>{ wg.rotation.y=(j?-1:1)*Math.sin(t*18)*.6; });
     if (u.body.userData.fire) u.body.scale.setScalar(1+.12*Math.sin(t*14+n.i));
     // approach ring closes onto the item exactly on the beat
-    const rk=clamp(dtn/1.1,0,1); u.ring.visible=!n.judged && dtn>-w.d && popK>.4; u.ring.scale.setScalar(u.base*.55*(1+rk*1.8)); u.ring.material.opacity=.35+.65*(1-rk);
+    const rk=clamp(dtn/Math.max(.3,n.t-n.pop),0,1); u.ring.visible=!n.judged && dtn>-w.d && popK>.5; u.ring.scale.setScalar(u.base*.55*(1+rk*1.8)); u.ring.material.opacity=.35+.65*(1-rk);
     u.glow.material.opacity=n.judged?.15:.55+.35*(1-rk)+.2*VIS.kick;
     // judged-miss items drift past grey
     // timeouts
