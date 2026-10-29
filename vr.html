@@ -2239,6 +2239,15 @@ body.arpage .xrhero{background:linear-gradient(135deg,rgba(94,224,160,.11),rgba(
 .xrseg button[aria-pressed="true"]{background:#e9eef6;color:#0b0f15}
 .xrlbl{font:700 11px/1 var(--num);letter-spacing:.12em;color:var(--dim);text-transform:uppercase;margin-right:6px}
 .xrwarn{font-size:12.5px;color:#ffcf9a}
+.gamebanner{display:flex;align-items:center;gap:16px;margin:0 0 18px;padding:18px 22px;border-radius:20px;text-decoration:none;color:var(--sign-ink);
+  background:linear-gradient(120deg,#ffd75e,#ffb800 55%,#ff8fb8);box-shadow:0 0 40px rgba(255,198,41,.28);transition:transform .15s,box-shadow .15s}
+.gamebanner:hover{transform:translateY(-2px);box-shadow:0 0 54px rgba(255,198,41,.4)}
+.gamebanner .gi{display:grid;place-items:center;flex:none;width:56px;height:56px;border-radius:16px;background:#14171c;color:#ffc629;font:900 28px/1 var(--display)}
+.gamebanner .gt{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.gamebanner b{font:900 clamp(1.25rem,2.6vw,1.7rem)/1.2 var(--display)}
+.gamebanner small{font:600 13px/1.45 var(--body);color:rgba(20,23,28,.78)}
+.gamebanner .ga{flex:none;font:900 30px/1 var(--display)}
+@media (max-width:560px){.gamebanner{padding:14px 16px;gap:12px}.gamebanner .gi{width:46px;height:46px}.gamebanner .ga{display:none}}
 #camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;background:#000}
 #stage.pass #ar{position:relative;z-index:1;background:transparent}
 #stage.stereo .hud,#stage.stereo .mini-wrap,#stage.stereo #miniWrap,#stage.stereo .overlay{display:none!important}
@@ -2302,6 +2311,11 @@ hero.innerHTML = MODE==='vr' ? `
     <p class="xrwarn">실제로 걸을 때는 넓고 안전한 곳에서, 주변을 보면서 써 주세요. 공간을 줄이면 한 걸음이 장면에서는 2~4걸음이 돼요.</p>
   </div>`;
 const wrap=document.querySelector('.wrap'); wrap.insertBefore(hero, document.querySelector('.topbar'));
+if (MODE==='vr'){
+  const gb=document.createElement('a'); gb.className='gamebanner'; gb.href='game.html';
+  gb.innerHTML='<span class="gi">♪</span><span class="gt"><b>VR 리듬 게임 하러 가기</b><small>서울역 · 홍대입구 · 지옥에서 노래에 맞춰 튀어나오는 것들을 양손 컨트롤러로 쳐내기 · 헤드셋이 없으면 키보드·터치로</small></span><span class="ga">→</span>';
+  wrap.insertBefore(gb, wrap.firstElementChild);
+}
 document.title = MODE==='vr' ? '길치 길찾기 · VR' : '길치 길찾기 · AR';
 const h1=document.querySelector('header.top h1'); if (h1) h1.textContent = MODE==='vr' ? '길치를 위한 길찾기 서비스 · VR' : '길치를 위한 길찾기 서비스 · AR';
 // AR page: start on the flat outdoor alley; it maps best onto a real floor
