@@ -662,9 +662,15 @@ function updateGuide(route,t,vis,o){
   let s=o.lost?Math.min(route.L,2.6):atTurn?corner.d:Math.min(route.L,o.moving?6.5:4.2);
   const q=polyAt(route,s); let tx=q.x, tz=q.z;
   if (atTurn){ const lean=.7+1.1*(o.beat||0); tx+=corner.ox*lean; tz+=corner.oz*lean; }
-  if (o.lost){ const a=t*3.2; tx+=Math.cos(a)*.9; tz+=Math.sin(a)*.9; }
-  const hop=o.playing?Math.abs(Math.sin(Math.PI*(o.beatPh||0)))*.38:Math.abs(Math.sin(t*2.2))*.25;
-  const ty=(o.vr?1.75:1.95)+hop;
+  if (o.lost){ const a=t*3.2; tx+=Math.cos(a)*.6; tz+=Math.sin(a)*.6; }
+  // never in the middle of your view: keep it at least 4.5 m ahead, off to one side, and above eye level
+  if (o.px!=null){ const fv=fwd(o.pa||0), rv=rgt(o.pa||0), vx=tx-o.px, vz=tz-o.pz, along=vx*fv[0]+vz*fv[1], lat=vx*rv[0]+vz*rv[1];
+    const minA=o.vr?3.2:4.5, minL=o.vr?1.4:2.0;
+    if (along<minA){ tx+=fv[0]*(minA-along); tz+=fv[1]*(minA-along); }
+    let side=lat>=0?1:-1; if (atTurn){ const dl=corner.ox*rv[0]+corner.oz*rv[1]; if (Math.abs(dl)>.3) side=dl>0?1:-1; }
+    if (Math.abs(lat)<minL){ const want=side*minL-lat; tx+=rv[0]*want; tz+=rv[1]*want; } }
+  const hop=o.playing?Math.abs(Math.sin(Math.PI*(o.beatPh||0)))*.3:Math.abs(Math.sin(t*2.2))*.2;
+  const ty=(o.vr?2.3:2.75)+hop;
   if (!G.orbPos) G.orbPos=new T.Vector3(tx,ty,tz);
   const P=G.orbPos, dx=tx-P.x, dz=tz-P.z, d=Math.hypot(dx,dz);
   if (d>30) P.set(tx,ty,tz);
@@ -681,7 +687,7 @@ function updateGuide(route,t,vis,o){
   G.ribbons.forEach(rb=>{ const u=rb.m.material.uniforms, e=B[rb.c.band];
     u.uT.value=vis.orbPh; u.uKick.value=vis.kick*(R.reduceMotion?.3:1); u.uAmp.value=(.25+.9*e)*(1-.35*lock); u.uLock.value=lock; u.uBright.value=(.75+.25*lock+.25*e)*dim; rb.holder.rotation.y=vis.orbPh*rb.c.spin; });
   G.core.scale.setScalar(1+.25*vis.kick); G.glow.scale.setScalar(.8+.4*vis.kick+.2*vis.bass); G.glow.material.opacity=(.5+.3*vis.kick)*dim;
-  G.orb.scale.setScalar((o.vr?.8:1.15)*(1+.15*lock)*(1+.12*(o.beat||0))*(1+.35*(o.climax||0)));
+  G.orb.scale.setScalar((o.vr?.65:.85)*(1+.1*lock)*(1+.1*(o.beat||0))*(1+.2*(o.climax||0)));
   // waves: from just ahead of you along the route you should take
   const s0=Math.min(1.8,route.L), L=Math.max(0,Math.min(16,route.L-s0,Math.max(3,(G.orbS||6)+1.5-s0))), on=L>1.2;
   G.waves.forEach(w=>w.m.visible=on);
