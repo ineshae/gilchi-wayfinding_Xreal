@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>SOUNDVERSE</title>
-<meta name="description" content="SOUNDVERSE — 잃어버린 소리의 세계. 심인성 난청을 겪는 주인공이 소리를 직접 만들고 조작하며 세계를 되살리는 VR 어드벤처 프로토타입 (Chapter 1 침묵의 숲 · Chapter 2 공명의 동굴)">
+<meta name="description" content="SOUNDVERSE — 잃어버린 소리의 세계. 심인성 난청을 겪는 주인공이 소리를 직접 만들고 조작하며 세계를 되살리는 VR 어드벤처 프로토타입 (Chapter 1 침묵의 숲 · Chapter 2 공명의 동굴 · Final 소리의 정원)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
@@ -90,30 +90,79 @@ button{font:inherit;color:inherit;cursor:pointer}
 .learn{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;text-align:left}
 .learn div{padding:12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--edge);font-size:13px;color:var(--muted);line-height:1.6}
 .learn b{display:block;color:var(--ink);margin-bottom:3px;font:700 14px/1.3 var(--serif)}
+
+/* ---------- running / flying speed lines ---------- */
+.speed{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .35s;background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(255,255,255,.0) 0deg 5deg,rgba(220,230,255,.07) 5deg 5.6deg);-webkit-mask:radial-gradient(circle at 50% 50%,transparent 32%,#000 78%);mask:radial-gradient(circle at 50% 50%,transparent 32%,#000 78%)}
+.speed.on{opacity:1}
+/* ---------- memory fragments: inventory ---------- */
+.inv{position:absolute;left:50%;top:max(14px,env(safe-area-inset-top));transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:8px 14px 8px 12px;border-radius:999px;background:rgba(10,10,24,.5);border:1px solid var(--edge);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.inv .lb{font:700 10px/1.25 var(--body);letter-spacing:.16em;color:var(--lav);text-align:right}
+.inv .lb small{display:block;font:500 10.5px/1.3 var(--body);letter-spacing:.02em;color:var(--muted)}
+.slot{position:relative;width:30px;height:30px;display:grid;place-items:center}
+.slot i{width:19px;height:19px;transform:rotate(45deg);border:1.5px dashed rgba(200,190,255,.35);border-radius:3px;transition:all .6s}
+.slot.got i{border:0;background:linear-gradient(135deg,#fff,var(--c));box-shadow:0 0 16px var(--c),0 0 4px #fff}
+.slot.sel::after{content:"";position:absolute;inset:-5px;border:1.5px solid #fff;border-radius:50%;box-shadow:0 0 12px rgba(255,255,255,.6)}
+.slot.used i{opacity:.28;box-shadow:none}
+.slot b{position:absolute;bottom:-3px;right:-3px;font:700 9.5px/1 var(--body);color:var(--muted)}
+.slot.pop i{animation:slotpop 1s ease}
+@keyframes slotpop{0%{transform:rotate(45deg) scale(2.4)}60%{transform:rotate(45deg) scale(.8)}100%{transform:rotate(45deg) scale(1)}}
+.invhint{font-size:10.5px;color:var(--muted);margin-left:2px}
+.invhint kbd{font:700 10px/1 var(--body);padding:1px 4px;border-radius:4px;border:1px solid var(--edge-2);color:var(--ink)}
+.invpanel{position:fixed;inset:0;display:grid;place-items:center;background:rgba(4,4,12,.55);pointer-events:none;opacity:0;transition:opacity .3s}
+.invpanel.on{opacity:1}
+.invbox{width:min(880px,92vw);padding:24px 24px 20px;border-radius:24px;background:rgba(10,10,26,.86);border:1px solid var(--edge-2)}
+.invbox h3{margin:0;font:700 22px/1.3 var(--serif)}
+.invbox .sub{margin-top:4px;font-size:13px;color:var(--muted)}
+.frags{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:16px}
+@media (max-width:760px){.frags{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.frag{padding:14px 12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--edge);min-height:190px}
+.frag .gem{width:26px;height:26px;transform:rotate(45deg);margin:6px 0 14px 6px;border-radius:4px;background:linear-gradient(135deg,#fff,var(--c));box-shadow:0 0 18px var(--c)}
+.frag.lock .gem{background:none;border:1.5px dashed rgba(200,190,255,.4);box-shadow:none}
+.frag .ch{font:italic 500 13px/1.2 var(--latin);letter-spacing:.06em;color:var(--muted)}
+.frag .nm{font:700 15px/1.35 var(--serif);margin-top:3px}
+.frag .ly{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:999px;font:700 10.5px/1.5 var(--body);color:#14112a;background:var(--c)}
+.frag.lock .ly{background:rgba(255,255,255,.1);color:var(--muted)}
+.frag p{margin:8px 0 0;font:400 12.5px/1.65 var(--serif);color:#d4d7ef}
+.frag.lock p{color:var(--dim)}
+.fragpop{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity .8s,transform 1.1s cubic-bezier(.6,0,.3,1)}
+.fragpop.on{opacity:1}
+.fragpop.fly{opacity:0;transform:translate(-50%,-42vh) scale(.25)}
+.fragpop .big{width:74px;height:74px;margin:0 auto;transform:rotate(45deg);border-radius:8px;background:linear-gradient(135deg,#fff,var(--c));box-shadow:0 0 50px var(--c),0 0 120px var(--c);animation:gemspin 3s ease-in-out infinite}
+@keyframes gemspin{50%{transform:rotate(45deg) scale(1.08)}}
+.fragpop .e{margin-top:30px;font:italic 500 15px/1 var(--latin);letter-spacing:.3em;color:var(--lav)}
+.fragpop h3{margin:10px 0 4px;font:700 28px/1.3 var(--serif);color:#fff;text-shadow:0 0 24px rgba(150,130,255,.6)}
+.fragpop p{margin:0;font:400 14.5px/1.6 var(--serif);color:#d6d9f2}
+/* ---------- sky garden: the composition panel ---------- */
+#mix{width:330px;height:236px;display:block}
 @media (max-width:640px){.keys{display:none}#compass{width:200px}.side{display:none}}
 @media (prefers-reduced-motion: reduce){.card,.mem{transition-duration:.2s}}
-@media (max-width:640px){.chap{display:none}.keys{display:none}.side{display:none}}
+@media (max-width:640px){.chap{display:none}.keys{display:none}.side{display:none}.inv .lb,.invhint{display:none}}
 </style>
 </head>
 <body>
 <canvas id="gl" aria-label="SOUNDVERSE 3D 화면"></canvas>
 <div class="vig"></div>
+<div class="speed" id="speed"></div>
 
 <div class="hud" id="hud" hidden>
   <div class="obj" id="obj"><div class="lb">지금 할 일</div><div class="tx" id="objT"></div><div class="sub" id="objS"></div></div>
   <div class="chap"><div class="c1" id="chapE">Chapter 1</div><div class="c2" id="chapT">침묵의 숲</div><div class="pips" id="pips"></div></div>
   <div class="cross" aria-hidden="true"><svg viewBox="-23 -23 46 46"><circle class="rg" r="12"/><circle class="dot" r="2.2"/><path class="ch" id="charge" d=""/></svg></div>
+  <div class="inv" id="inv" aria-label="기억의 조각"><div class="lb">기억의 조각<small id="invN">0 / 5</small></div><div id="slots" style="display:flex;gap:4px"></div><span class="invhint"><kbd>Tab</kbd> 펼쳐보기</span></div>
   <div class="prompt" id="prompt"></div>
   <div class="mem" id="mem"></div>
   <canvas id="compass" width="520" height="172" aria-label="소리 나침반: 소리가 들린 방향이 빛으로 표시돼요"></canvas>
   <div class="keys" id="keys"><kbd>W A S D</kbd> 걷기 · <kbd>마우스</kbd> 둘러보기<br><kbd>클릭</kbd> 잡기 · 두드리기 · <kbd>꾹 눌렀다 떼기</kbd> 던지기<br><kbd>우클릭</kbd>/<kbd>Q</kbd> 귀 기울이기 · <kbd>휠</kbd> 음높이 · <kbd>Esc</kbd> 마우스 풀기</div>
   <div class="side">
     <div class="pnl" id="wavePnl" hidden><div class="lb">공명 맞추기 <b id="waveHz"></b></div><canvas id="wave" width="600" height="240"></canvas></div>
+    <div class="pnl" id="mixPnl" hidden><div class="lb">음악의 구성 · 소리의 조화 <b id="mixN"></b></div><canvas id="mix" width="660" height="472"></canvas></div>
     <div class="pnl" id="pitchPnl" hidden><div class="lb">음높이 <b id="pitchN"></b></div><canvas id="pitch" width="600" height="192"></canvas></div>
   </div>
   <div class="lockhint" id="lockhint" hidden>화면을 클릭하면 다시 둘러볼 수 있어요</div>
 </div>
 
+<div class="invpanel" id="invPanel" aria-hidden="true"><div class="invbox"><h3>기억의 조각</h3><div class="sub" id="invSub">챕터를 하나씩 마칠 때마다 조각이 하나씩 모여요. 다섯 조각이 모이면, 나만의 노래가 완성돼요.</div><div class="frags" id="frags"></div></div></div>
+<div class="fragpop" id="fragPop"><div class="big" id="fragBig"></div><div class="e">MEMORY FRAGMENT</div><h3 id="fragT"></h3><p id="fragS"></p></div>
 <div class="card" id="card"><div class="in"><div class="e" id="cardE">CHAPTER 1</div><h2 id="cardT"></h2><p id="cardS"></p></div></div>
 <div class="flash" id="flash"></div>
 
@@ -126,7 +175,7 @@ button{font:inherit;color:inherit;cursor:pointer}
       어느 밤 꿈속에서 나는 <b>소리가 사라진 세계</b>에 들어왔어요. 이곳에서는 소리가 사라진 자리마다 색과 움직임도 멈춰 있어요.<br>
       이상하게도 이 세계에서 소리는 <b>빛의 물결</b>로 보여요. 손에 쥔 <b>소리 구슬</b>로 직접 소리를 만들고, 흩어진 기억을 찾아 세계를 되살려요.</p>
     <div class="ctl">
-      <div><b>걷고 둘러보기</b><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 걷기, 마우스로 둘러보기, <kbd>Shift</kbd> 빨리</div>
+      <div><b>걷고 둘러보기</b><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 걷기, 마우스로 둘러보기, <kbd>Shift</kbd> 누르고 있으면 달리기</div>
       <div><b>잡기 · 두드리기</b>가운데 점을 맞추고 <kbd>클릭</kbd> (또는 <kbd>E</kbd>)</div>
       <div><b>던지기 · 누르기</b>구슬을 쥔 채 <kbd>꾹</kbd> 눌렀다 떼면 던져요. 오래 누를수록 크고 멀리 퍼져요</div>
       <div><b>귀 기울이기 · 음높이</b><kbd>우클릭</kbd>/<kbd>Q</kbd>로 소리의 방향 보기, <kbd>휠</kbd>로 크리스털 음높이 바꾸기</div>
@@ -134,21 +183,22 @@ button{font:inherit;color:inherit;cursor:pointer}
     <div class="btns">
       <button class="btn main" id="startBtn" type="button">Chapter 1 · 침묵의 숲부터</button>
       <button class="btn" id="ch2Btn" type="button">Chapter 2 · 공명의 동굴 바로 하기</button>
+      <button class="btn" id="ch5Btn" type="button">Final · 소리의 정원 (하늘을 날며)</button>
     </div>
-    <p class="note">이어폰을 끼면 소리의 방향이 더 또렷해요 · 컴퓨터(마우스·키보드)용 프로토타입</p>
+    <p class="note">챕터를 마칠 때마다 <b style="color:#fff">기억의 조각</b>이 하나씩 모여요 · <kbd style="font:700 10px/1 var(--body);padding:1px 4px;border-radius:4px;border:1px solid var(--edge-2)">Tab</kbd>으로 펼쳐 보기<br>이어폰을 끼면 소리의 방향이 더 또렷해요 · 컴퓨터(마우스·키보드)용 프로토타입</p>
   </div>
 </div>
 
 <div class="ov" id="end" hidden style="background:rgba(4,4,10,.55)">
   <div class="endbox">
-    <div class="genre">Prototype · Chapter 1 – 2</div>
+    <div class="genre" id="endE">Prototype · Chapter 1 – 2</div>
     <h2 id="endT">공명의 동굴이 열렸어요</h2>
     <p id="endP"></p>
-    <div class="learn">
+    <div class="learn" id="learn">
       <div><b>침묵의 숲 · 소리의 방향</b>소리는 퍼져 나가며 멀어질수록 작아지고, 양쪽 귀에 닿는 차이로 방향을 알 수 있어요.</div>
       <div><b>공명의 동굴 · 소리의 높낮이</b>작은 크리스털일수록 높은 소리. 두 소리의 주파수가 같아지면 맥놀이가 사라지고 공명해요.</div>
     </div>
-    <div class="btns"><button class="btn main" id="againBtn" type="button">처음부터 다시</button><button class="btn" id="ch2AgainBtn" type="button">Chapter 2 다시</button></div>
+    <div class="btns"><button class="btn main" id="toFinalBtn" type="button">Final · 소리의 정원으로</button><button class="btn" id="keepBtn" type="button" hidden>정원에 남아 계속 날기</button><button class="btn" id="againBtn" type="button">처음부터 다시</button><button class="btn" id="ch2AgainBtn" type="button">Chapter 2 다시</button></div>
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -272,8 +322,8 @@ function listenerTick(){
 }
 
 /* ================= player ================= */
-const P=SV.P={ pos:new T.Vector3(0,1.62,0), yaw:0, pitch:0, keys:{}, listen:false, locked:false, drag:null, bob:0, frozen:false };
-const KEYMAP={ KeyW:'f', ArrowUp:'f', KeyS:'b', ArrowDown:'b', KeyA:'l', ArrowLeft:'l', KeyD:'r', ArrowRight:'r', ShiftLeft:'run', ShiftRight:'run' };
+const P=SV.P={ pos:new T.Vector3(0,1.62,0), yaw:0, pitch:0, keys:{}, listen:false, locked:false, drag:null, bob:0, frozen:false, vel:new T.Vector3(), roll:0, moving:false };
+const KEYMAP={ KeyW:'f', ArrowUp:'f', KeyS:'b', ArrowDown:'b', KeyA:'l', ArrowLeft:'l', KeyD:'r', ArrowRight:'r', ShiftLeft:'run', ShiftRight:'run', Space:'up', KeyC:'down', KeyZ:'down' };
 addEventListener('keydown',e=>{ if (!SV.playing) return; const k=KEYMAP[e.code]; if (k){ P.keys[k]=true; e.preventDefault(); }
   if (e.code==='KeyQ') P.listen=true; if (e.code==='KeyE' && !e.repeat){ SV.press(); SV.release(true); } });
 addEventListener('keyup',e=>{ const k=KEYMAP[e.code]; if (k) P.keys[k]=false; if (e.code==='KeyQ') P.listen=false; });
@@ -290,7 +340,16 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{ if (!SV.playing) return; SV.chapter && SV.chapter.onWheel && SV.chapter.onWheel(SV.aim, Math.sign(e.deltaY)); },{ passive:true });
 function movePlayer(dt){
   const C=SV.chapter; if (!C || P.frozen) return;
-  const f=(P.keys.f?1:0)-(P.keys.b?1:0), s=(P.keys.r?1:0)-(P.keys.l?1:0), sp=P.keys.run?5.2:3.1;
+  const f=(P.keys.f?1:0)-(P.keys.b?1:0), s=(P.keys.r?1:0)-(P.keys.l?1:0), sp=P.keys.run?6.6:3.1;
+  P.moving=!!(f||s);
+  if (C.fly){ // the sky garden: fly where you look; Space up, C down, Shift to rush
+    const u=(P.keys.up?1:0)-(P.keys.down?1:0), fs=P.keys.run?17:8.5, cp=Math.cos(P.pitch);
+    const tx=(-Math.sin(P.yaw)*cp*f+Math.cos(P.yaw)*s)*fs, ty=(Math.sin(P.pitch)*f+u*.85)*fs, tz=(-Math.cos(P.yaw)*cp*f-Math.sin(P.yaw)*s)*fs;
+    P.moving=!!(f||s||u); P.vel.lerp(V.set(tx,ty,tz),Math.min(1,dt*2.6));
+    const nx=P.pos.x+P.vel.x*dt, ny=P.pos.y+P.vel.y*dt, nz=P.pos.z+P.vel.z*dt;
+    if (C.flyOK(nx,ny,nz)) P.pos.set(nx,ny,nz); else { if (C.flyOK(nx,P.pos.y,P.pos.z)) P.pos.x=nx; else P.vel.x*=-.3; if (C.flyOK(P.pos.x,ny,P.pos.z)) P.pos.y=ny; else P.vel.y*=-.3; if (C.flyOK(P.pos.x,P.pos.y,nz)) P.pos.z=nz; else P.vel.z*=-.3; }
+    P.roll=lerp(P.roll,-s*.13-(P.keys.run&&f?0:0),Math.min(1,dt*3)); P.bob+=dt; return; }
+  P.roll=lerp(P.roll,0,Math.min(1,dt*4));
   if (f||s){ const fx=-Math.sin(P.yaw), fz=-Math.cos(P.yaw), rx=Math.cos(P.yaw), rz=-Math.sin(P.yaw); let vx=fx*f+rx*s, vz=fz*f+rz*s; const L=Math.hypot(vx,vz)||1; vx=vx/L*sp*dt; vz=vz/L*sp*dt;
     const nx=P.pos.x+vx, nz=P.pos.z+vz;
     if (C.walkable(nx,nz)){ P.pos.x=nx; P.pos.z=nz; } else if (C.walkable(nx,P.pos.z)) P.pos.x=nx; else if (C.walkable(P.pos.x,nz)) P.pos.z=nz;
@@ -446,7 +505,8 @@ SV.loop=function(){
     if (SV.playing) movePlayer(dt);
     camera.position.copy(P.pos); const bob=(P.keys.f||P.keys.b||P.keys.l||P.keys.r)&&!reduceMotion?Math.sin(P.bob)*.035:0; camera.position.y+=bob;
     if (SV.shake>0){ camera.position.x+=(Math.random()-.5)*SV.shake*.12; camera.position.y+=(Math.random()-.5)*SV.shake*.12; SV.shake=Math.max(0,SV.shake-dt*1.4); }
-    camera.rotation.set(P.pitch,P.yaw,0);
+    camera.rotation.set(P.pitch,P.yaw,P.roll||0);
+    { const rush=SV.playing && P.keys.run && P.moving && !P.frozen, fv=rush?(C.fly?86:79):70; if (Math.abs(camera.fov-fv)>.05){ camera.fov=lerp(camera.fov,fv,Math.min(1,dt*5)); camera.updateProjectionMatrix(); } el('speed').classList.toggle('on',rush); }
     aimTick(); orbTick(dt); wavesTick(dt); C.update(dt,SV.t);
     if (SV.playing && C.prompt) SV.prompt(C.prompt(SV.aim)); else SV.prompt('');
     listenerTick(); ambientTick(dt); compassTick(dt);
@@ -458,6 +518,80 @@ SV.loop=function(){
 };
 SV.setChapter=function(C){ if (SV.chapter && SV.chapter.exit) SV.chapter.exit(); SV.clearWaves(); blips.length=0; SV.chapter=C; SV.attachOrb(C.scene); C.enter(); };
 SV.fadeTo=function(fn,dur=1.4){ const u=post.uniforms.uFade, t0=performance.now(); const step=()=>{ const k=(performance.now()-t0)/(dur*500); if (k<1){ u.value=k; requestAnimationFrame(step); } else { u.value=1; fn(); const t1=performance.now(); const up=()=>{ const q=(performance.now()-t1)/(dur*500); u.value=Math.max(0,1-q); if (q<1) requestAnimationFrame(up); }; up(); } }; step(); };
+})();
+</script>
+<script>
+/* =====================================================================
+   SOUNDVERSE · memory fragments (inventory)
+   One fragment per chapter. In the final chapter the five fragments become
+   the five layers of the protagonist's own song.
+   ===================================================================== */
+(function(){
+'use strict';
+const el=id=>document.getElementById(id);
+const FR=[
+  { id:'forest', ch:'Chapter 1 · 침묵의 숲', name:'방향의 조각', learn:'소리의 방향', col:'#8ff3ff', hex:0x8ff3ff,
+    layer:'반짝임 · 공간', band:[4600,null], hint:'높고 반짝이는 소리 · 노래가 퍼져 나가는 공간',
+    mem:'“괜찮아?” 누군가 나를 부르던 목소리. 소리는 사라진 게 아니라, 내가 등을 돌리고 있었을 뿐이었어.' },
+  { id:'cave', ch:'Chapter 2 · 공명의 동굴', name:'높낮이의 조각', learn:'소리의 높낮이', col:'#ff9fd8', hex:0xff9fd8,
+    layer:'멜로디', band:[480,1700], hint:'노래의 선율 · 높아졌다 낮아지는 음',
+    mem:'두드리면, 대답해. 세상은 여전히 나에게 말을 걸고 있었어.' },
+  { id:'clock', ch:'Chapter 3 · 멈춰버린 시계탑', name:'리듬의 조각', learn:'리듬과 시간', col:'#ffe28a', hex:0xffe28a,
+    layer:'박동 · 리듬', band:[null,150], hint:'둥, 둥 — 노래의 심장 박동', proto:true,
+    mem:'멈춰 있던 시계가 다시 째깍였어. 내 심장도 같은 박자로 뛰고 있었어.' },
+  { id:'lake', ch:'Chapter 4 · 기억의 호수', name:'감정의 조각', learn:'소리와 감정', col:'#c9b6ff', hex:0xc9b6ff,
+    layer:'화음 · 따뜻함', band:[150,480], hint:'노래를 감싸는 낮고 따뜻한 화음', proto:true,
+    mem:'슬픈 소리도, 따뜻한 소리도 모두 내 마음의 일부였어.' },
+  { id:'voice', ch:'소리 구슬', name:'목소리의 조각', learn:'나만의 목소리', col:'#8dffcf', hex:0x8dffcf,
+    layer:'목소리', band:[1700,4600], hint:'노래하는 목소리의 결',
+    mem:'손에 쥐고 있던 소리 구슬은 처음부터 내 목소리였어. 다시 노래해 보고 싶어.' }
+];
+const KEY='soundverse.fragments.v1';
+let owned=new Set(); try{ const v=JSON.parse(localStorage.getItem(KEY)||'[]'); if (Array.isArray(v)) v.forEach(x=>owned.add(x)); }catch(_){}
+const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify([...owned])); }catch(_){} };
+
+const INV=SV.INV={ FR, mode:'collect', assumed:false, sel:-1, used:new Map() /* fragment index -> pad index */ };
+INV.has=i=>INV.assumed || owned.has(FR[i].id);
+INV.count=()=>FR.filter((_,i)=>INV.has(i)).length;
+
+/* ---- the slot bar at the top of the screen ---- */
+const slots=el('slots');
+FR.forEach((f,i)=>{ const d=document.createElement('div'); d.className='slot'; d.style.setProperty('--c',f.col); d.title=f.name; d.innerHTML='<i></i><b>'+(i+1)+'</b>'; slots.appendChild(d); });
+INV.render=function(){
+  [...slots.children].forEach((d,i)=>{ d.classList.toggle('got',INV.has(i)); d.classList.toggle('sel',INV.mode==='garden' && INV.sel===i); d.classList.toggle('used',INV.mode==='garden' && INV.used.has(i)); });
+  el('invN').textContent=INV.mode==='garden' ? ('정원에 놓은 조각 '+INV.used.size+' / 5') : (INV.count()+' / 5');
+  const box=el('frags'); box.innerHTML='';
+  FR.forEach((f,i)=>{ const h=INV.has(i), d=document.createElement('div'); d.className='frag'+(h?'':' lock'); d.style.setProperty('--c',f.col);
+    const where=INV.mode==='garden'?(INV.used.has(i)?' · 정원에 놓음':' · 손에 있음'):'';
+    d.innerHTML='<div class="gem"></div><div class="ch">'+f.ch+'</div><div class="nm">'+(h?f.name:'아직 찾지 못한 기억')+'</div>'+
+      '<span class="ly">'+(h?'노래의 '+f.layer+where:'잠겨 있음')+'</span>'+
+      '<p>'+(h?f.mem:(f.id==='voice'?'마지막 장, 소리의 정원에서 깨어나요.':f.ch.split('·')[1].trim()+'을(를) 마치면 얻어요.'))+'</p>'+
+      (h&&f.proto&&INV.assumed&&!owned.has(f.id)?'<p style="color:var(--dim);font-size:11.5px">· 프로토타입: 아직 만들지 않은 챕터의 조각을 가지고 있다고 가정해요</p>':'');
+    box.appendChild(d); });
+};
+INV.select=function(i){ if (i<0 || i>=FR.length || !INV.has(i)) return; INV.sel=i; INV.render(); SV.chapter && SV.chapter.onSelect && SV.chapter.onSelect(i); };
+INV.reset=function(){ INV.mode='collect'; INV.assumed=false; INV.sel=-1; INV.used.clear(); INV.render(); };
+
+/* ---- getting a fragment: it glows in the middle, then flies up into its slot ---- */
+INV.award=function(id){
+  const i=FR.findIndex(f=>f.id===id); if (i<0) return; const f=FR[i]; const first=!owned.has(id); owned.add(id); save();
+  const pop=el('fragPop'); pop.style.setProperty('--c',f.col); el('fragT').textContent=f.name; el('fragS').innerHTML=f.ch+' · '+f.learn+'<br><span style="color:var(--muted);font-size:13px">노래의 「'+f.layer+'」이(가) 되어 줄 거예요 · Tab으로 펼쳐 보기</span>';
+  pop.classList.remove('fly'); pop.classList.add('on'); SV.flash(.35);
+  if (SV.AU.ctx){ const p=SV.camera.position.clone(); [0,1,2].forEach(k=>SV.AU.tone(null,{ f:[659.25,987.77,1318.5][k], kind:'chime', dur:2.4, vol:.22, delay:k*.14 })); }
+  setTimeout(()=>{ pop.classList.add('fly'); },3600);
+  setTimeout(()=>{ pop.classList.remove('on','fly'); INV.render(); const s=slots.children[i]; s.classList.remove('pop'); void s.offsetWidth; s.classList.add('pop'); },4700);
+  return first;
+};
+
+/* ---- Tab / I: open the whole inventory; 1–5 pick a fragment in the garden ---- */
+const panel=el('invPanel');
+INV.toggle=function(on){ on=on==null?!panel.classList.contains('on'):on; INV.render(); panel.classList.toggle('on',on); panel.setAttribute('aria-hidden',on?'false':'true'); };
+addEventListener('keydown',e=>{
+  if (!SV.playing) return;
+  if (e.code==='Tab' || e.code==='KeyI'){ e.preventDefault(); if (!e.repeat) INV.toggle(); return; }
+  const m=/^Digit([1-5])$/.exec(e.code)||/^Numpad([1-5])$/.exec(e.code); if (m && INV.mode==='garden'){ INV.select(+m[1]-1); }
+});
+INV.render();
 })();
 </script>
 <script>
@@ -760,8 +894,9 @@ function startBloom(){
   [523.25,659.25,783.99,1046.5].forEach((f,i)=>SV.AU.tone(p,{ f, kind:'bell', dur:5, vol:.35, delay:i*.45 }));
   SV.wave(p,1,{ color:0xd8c8ff, maxR:40, speed:9, src:'flower' }); SV.shake=.6;
   SV.later(()=>{ SV.flash(.6); SV.memory('소리는 사라진 게 아니었어.<br>내가 등을 돌리고 있었을 뿐이야.','',7); },2600);
-  SV.later(()=>SV.card('CHAPTER 1 COMPLETE','소리의 방향','잃어버린 감각에 대한 두려움을 처음으로 마주했어요.<br>소리는 퍼져 나가고, 그 방향을 따라가면 닿을 수 있어요.',5),8200);
-  SV.later(()=>SV.fadeTo(()=>SV.goChapter(2)),13500);
+  SV.later(()=>SV.INV.award('forest'),5200);
+  SV.later(()=>SV.card('CHAPTER 1 COMPLETE','소리의 방향','잃어버린 감각에 대한 두려움을 처음으로 마주했어요.<br>소리는 퍼져 나가고, 그 방향을 따라가면 닿을 수 있어요.',5),10200);
+  SV.later(()=>SV.fadeTo(()=>SV.goChapter(2)),15600);
 }
 
 /* ---------- enter / exit ---------- */
@@ -1030,8 +1165,13 @@ C2.update=(dt,t)=>{
 function finale(){
   P0().frozen=true; SV.AU.tone(new T.Vector3(0,7,-36),{ f:440, kind:'bell', dur:6, vol:.4 }); [659.25,783.99,523.25,880].forEach((f,i)=>SV.AU.tone(new T.Vector3(0,7,-36),{ f, kind:'glass', dur:4, vol:.3, delay:.6+i*.7 }));
   SV.memory('처음으로, 다시 들어 보고 싶어졌어.<br>무섭더라도, 소리에 손을 내밀어 보고 싶어.','',7);
-  SV.later(()=>SV.card('CHAPTER 2 COMPLETE','소리의 높낮이','큰 결정은 낮게, 작은 결정은 높게. 같은 높이의 소리는 서로를 울려요.<br>소리와 다시 이어지려는 첫 시도였어요.',5),6000);
-  SV.later(()=>{ document.exitPointerLock&&document.exitPointerLock(); SV.playing=false; el('hud').hidden=true; el('endP').innerHTML='침묵의 숲에서 소리의 방향을 따라가 기억을 되찾았고,<br>공명의 동굴에서 소리의 높낮이를 맞춰 닫힌 문을 열었어요.<br><br>다음 이야기 — 멈춰버린 시계탑(리듬과 시간), 기억의 호수(소리와 감정), 소리의 정원(나만의 음악)이 이어질 예정이에요.'; el('end').hidden=false; },11500);
+  SV.later(()=>SV.INV.award('cave'),3600);
+  SV.later(()=>SV.card('CHAPTER 2 COMPLETE','소리의 높낮이','큰 결정은 낮게, 작은 결정은 높게. 같은 높이의 소리는 서로를 울려요.<br>소리와 다시 이어지려는 첫 시도였어요.',5),9000);
+  SV.later(()=>{ document.exitPointerLock&&document.exitPointerLock(); SV.playing=false; el('hud').hidden=true; SV.INV.toggle(false);
+    el('endE').textContent='Prototype · Chapter 1 – 2'; el('endT').textContent='공명의 동굴이 열렸어요';
+    el('endP').innerHTML='침묵의 숲에서 소리의 방향을 따라가 <b style="color:#8ff3ff">방향의 조각</b>을,<br>공명의 동굴에서 소리의 높낮이를 맞춰 <b style="color:#ff9fd8">높낮이의 조각</b>을 얻었어요.<br><br>멈춰버린 시계탑(리듬과 시간)과 기억의 호수(소리와 감정)는 아직 만드는 중이에요.<br>대신 다섯 조각을 모두 가졌다고 가정하고, 마지막 장 <b>소리의 정원</b>을 먼저 날아 볼 수 있어요.';
+    el('learn').innerHTML='<div><b>침묵의 숲 · 소리의 방향</b>소리는 퍼져 나가며 멀어질수록 작아지고, 양쪽 귀에 닿는 차이로 방향을 알 수 있어요.</div><div><b>공명의 동굴 · 소리의 높낮이</b>작은 크리스털일수록 높은 소리. 두 소리의 주파수가 같아지면 맥놀이가 사라지고 공명해요.</div>';
+    el('toFinalBtn').hidden=false; el('keepBtn').hidden=true; el('ch2AgainBtn').hidden=false; el('end').hidden=false; },14500);
 }
 const P0=()=>SV.P;
 
@@ -1056,6 +1196,377 @@ SV.C2=C2;
 })();
 </script>
 <script>
+/* =====================================================================
+   SOUNDVERSE · Final Chapter — 소리의 정원 (나만의 음악 완성)
+   A garden floating in the sky. You fly. The five memory fragments are
+   the five layers of your song: place them on the glowing flower stands,
+   anywhere you like, and the song comes back layer by layer — from the
+   place where you set it. When the song is whole, colour and motion return
+   and you face the memory you ran from.
+   ===================================================================== */
+(function(){
+'use strict';
+const T=THREE, el=id=>document.getElementById(id), INV=SV.INV, FR=INV.FR;
+let seed=11; const rnd=()=>{ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; };
+const lerp=(a,b,k)=>a+(b-a)*k, clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const C5={ scene:new T.Scene(), interactables:[], fly:true, waveColor:0xffd8f0 };
+const scene=C5.scene; scene.fog=new T.FogExp2(0x3a2c66,.0058);
+const V=new T.Vector3(), V2=new T.Vector3();
+
+/* ---------- sky: violet dusk with a peach horizon (concept art: purple forest, floating crystals) ---------- */
+const skyMat=new T.ShaderMaterial({ side:T.BackSide, depthWrite:false, fog:false, uniforms:{ uT:{value:0}, uK:{value:0} },
+  vertexShader:`varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  fragmentShader:`varying vec3 vP; uniform float uT,uK;
+    float h3(vec3 p){ return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453); }
+    void main(){ vec3 d=normalize(vP); float h=d.y;
+      vec3 top=vec3(.05,.04,.17), mid=vec3(.34,.2,.6), hor=vec3(1.,.68,.78), low=vec3(.3,.22,.5);
+      vec3 c=h>0.?mix(hor,mix(mid,top,smoothstep(.18,.75,h)),smoothstep(0.,.28,h)):mix(hor,low,smoothstep(0.,-.35,h));
+      float s=step(.9972,h3(floor(d*230.))); c+=s*smoothstep(.12,.6,h)*(.55+.45*sin(uT*2.+d.x*50.));
+      float a=pow(sin(d.x*5.+d.z*3.+uT*.2)*.5+.5,7.); c+=vec3(.35,1.,.85)*uK*.32*a*smoothstep(.2,.45,h)*smoothstep(.8,.5,h);
+      gl_FragColor=vec4(c,1.); }` });
+scene.add(new T.Mesh(new T.SphereGeometry(420,32,20),skyMat));
+const sun=new T.Sprite(SV.glow(0xffc2a8,.9,true)); sun.material.fog=false; sun.position.set(-160,28,-330); sun.scale.setScalar(160); scene.add(sun);
+scene.add(new T.HemisphereLight(0xd9c8ff,0x3a2860,.85)); scene.add(new T.AmbientLight(0x6a5aa0,.35));
+const dl=new T.DirectionalLight(0xffd6e8,.75); dl.position.set(-60,80,-40); scene.add(dl);
+
+/* ---------- a sea of clouds below ---------- */
+const cloudMat=new T.ShaderMaterial({ transparent:true, depthWrite:false, fog:false, uniforms:{ uF:{value:0}, uK:{value:0} },
+  vertexShader:`varying vec3 vW; void main(){ vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }`,
+  fragmentShader:`varying vec3 vW; uniform float uF,uK;
+    float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+    float n(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+1.),f.x),f.y); }
+    float fb(vec2 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*n(p); p*=2.03; a*=.5; } return s; }
+    void main(){ vec2 p=vW.xz*.012+vec2(uF*.6,uF*.25); float c=fb(p)*.75+fb(p*2.3-uF*.3)*.35;
+      float d=length(vW.xz); float fade=smoothstep(420.,140.,d);
+      vec3 col=mix(vec3(.42,.32,.66),vec3(1.,.86,.92),smoothstep(.45,.95,c)); col=mix(col,col*vec3(1.05,.95,1.1),uK);
+      gl_FragColor=vec4(col,smoothstep(.3,.7,c)*fade*.95); }` });
+const clouds=new T.Mesh(new T.PlaneGeometry(900,900,1,1),cloudMat); clouds.rotation.x=-Math.PI/2; clouds.position.y=-30; scene.add(clouds);
+const puffTex=SV.canvasTex(128,128,(c,w,h)=>{ for (let i=0;i<9;i++){ const x=w*(.25+Math.random()*.5), y=h*(.35+Math.random()*.3), r=w*(.16+Math.random()*.14); const g=c.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,'rgba(255,255,255,.55)'); g.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=g; c.fillRect(0,0,w,h); } });
+const puffs=[]; for (let i=0;i<26;i++){ const s=new T.Sprite(new T.SpriteMaterial({ map:puffTex, color:0xf2dcff, transparent:true, opacity:.34, depthWrite:false })); const a=rnd()*6.28, d=45+rnd()*90; s.position.set(Math.cos(a)*d,-14+rnd()*30,Math.sin(a)*d); s.scale.set(26+rnd()*30,12+rnd()*10,1); s.userData.a=a; s.userData.d=d; scene.add(s); puffs.push(s); }
+
+/* ---------- floating islands ---------- */
+const solids=[];
+const rockMat=new T.MeshStandardMaterial({ color:0x342a5e, roughness:.95, flatShading:true });
+const topMat=new T.MeshStandardMaterial({ color:0x5d4b96, roughness:.9, flatShading:true });
+const fallMat=new T.ShaderMaterial({ transparent:true, depthWrite:false, blending:T.AdditiveBlending, side:T.DoubleSide, uniforms:{ uF:{value:0}, uK:{value:0} },
+  vertexShader:`varying vec2 vU; void main(){ vU=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  fragmentShader:`varying vec2 vU; uniform float uF,uK; float h(float x){ return fract(sin(x*91.7)*437.5); }
+    void main(){ float col=floor(vU.x*26.); float sp=.6+h(col)*.8; float s=fract(vU.y*3.+uF*sp+h(col+3.)); float streak=smoothstep(.0,.3,s)*smoothstep(1.,.5,s);
+      float a=streak*(.35+.65*h(col+7.))*smoothstep(0.,.25,vU.y)*smoothstep(1.,.85,vU.y)*smoothstep(0.,.15,vU.x)*smoothstep(1.,.85,vU.x);
+      gl_FragColor=vec4(mix(vec3(.75,.85,1.),vec3(.7,1.,.95),uK)*a,a*(.45+.4*uK)); }` });
+function island(x,y,z,r,h,o={}){
+  const g=new T.Group(); g.position.set(x,y,z);
+  const top=new T.Mesh(new T.CylinderGeometry(r,r*.9,.9,o.seg||16),topMat); top.position.y=0; g.add(top);
+  const rock=new T.Mesh(new T.ConeGeometry(r*.92,h,o.seg||16,3),rockMat); rock.rotation.x=Math.PI; rock.position.y=-h/2-.4;
+  const pa=rock.geometry.attributes.position; for (let i=0;i<pa.count;i++){ const yy=pa.getY(i); if (yy<h/2-.01){ pa.setX(i,pa.getX(i)*(.85+rnd()*.3)); pa.setZ(i,pa.getZ(i)*(.85+rnd()*.3)); } } rock.geometry.computeVertexNormals(); g.add(rock);
+  const rim=new T.LineSegments(new T.EdgesGeometry(new T.CylinderGeometry(r,r*.9,.9,o.seg||16),30),new T.LineBasicMaterial({ color:o.rim||0xbfaaff, transparent:true, opacity:.35, blending:T.AdditiveBlending, depthWrite:false })); g.add(rim);
+  if (o.fall){ const a=rnd()*6.28, w=r*.7; const f=new T.Mesh(new T.PlaneGeometry(w,22),fallMat); f.position.set(Math.cos(a)*r*.98,-11,Math.sin(a)*r*.98); f.rotation.y=-a+Math.PI/2; g.add(f); }
+  scene.add(g); solids.push({ x, y:y+.45, z, r, h:h+.4 }); return g;
+}
+// decorative islands drifting around the garden
+const isl=[]; for (let i=0;i<12;i++){ const a=i/12*6.28+rnd()*.3, d=48+rnd()*30; const r=3+rnd()*5; isl.push(island(Math.cos(a)*d,-8+rnd()*26,Math.sin(a)*d,r,r*2.2+rnd()*4,{ fall:rnd()>.4, seg:9+(rnd()*6|0) })); }
+// neon-outlined trees on islands (concept art: trees drawn with light)
+const treeGeo=new T.ConeGeometry(1,3.2,6), treeMat=new T.MeshStandardMaterial({ color:0x2a2050, emissive:0x2a1060, emissiveIntensity:.4, flatShading:true });
+const treeEdge=new T.EdgesGeometry(treeGeo);
+const treeCols=[0x8ff3ff,0xff9fd8,0xc9b6ff,0x8dffcf];
+isl.forEach((g,k)=>{ const s=solids[k]; const n=1+(rnd()*3|0); for (let i=0;i<n;i++){ const a=rnd()*6.28, d=rnd()*s.r*.6, sc=.6+rnd()*.7; const t=new T.Mesh(treeGeo,treeMat); t.scale.setScalar(sc); t.position.set(Math.cos(a)*d,1.6*sc+.4,Math.sin(a)*d); g.add(t);
+  const e=new T.LineSegments(treeEdge,new T.LineBasicMaterial({ color:treeCols[(k+i)%4], transparent:true, opacity:.8, blending:T.AdditiveBlending, depthWrite:false })); e.scale.copy(t.scale); e.position.copy(t.position); g.add(e); } });
+
+/* ---------- the stage in the middle: a closed crystal lotus under a ringed sphere ---------- */
+const CEN=new T.Vector3(0,-2,0);
+island(CEN.x,CEN.y,CEN.z,13,24,{ fall:true, seg:22, rim:0xffd8f0 });
+const lotus=new T.Group(); lotus.position.set(0,CEN.y+.5,0); scene.add(lotus);
+const petals=[]; const pg=new T.OctahedronGeometry(1,0);
+[[9,4.6,.0,0xff9fd8],[9,3.4,.35,0xc9b6ff],[7,2.2,.2,0xffe6f4]].forEach(([n,len,off,col],ring)=>{ for (let i=0;i<n;i++){ const a=(i+off)/n*6.28; const hold=new T.Group(); hold.rotation.y=-a; lotus.add(hold);
+  const tilt=new T.Group(); tilt.position.x=1.2+ring*.25; hold.add(tilt); const m=new T.Mesh(pg,SV.crystalMat(col,.62,.55)); m.scale.set(.75,len,.32); m.position.y=len*.92; tilt.add(m);
+  const e=SV.edges(pg,col,.6); e.scale.copy(m.scale); e.position.copy(m.position); tilt.add(e); petals.push({ tilt, ring, base:.12+ring*.05 }); } });
+const core=new T.Group(); core.position.set(0,CEN.y+16,0); scene.add(core);
+const sphMat=new T.ShaderMaterial({ transparent:true, depthWrite:false, uniforms:{ uF:{value:0}, uK:{value:0}, uL:{value:0} },
+  vertexShader:`varying vec3 vN; varying vec3 vP; varying vec3 vV; void main(){ vN=normalize(normalMatrix*normal); vP=position; vec4 mv=modelViewMatrix*vec4(position,1.); vV=normalize(-mv.xyz); gl_Position=projectionMatrix*mv; }`,
+  fragmentShader:`varying vec3 vN; varying vec3 vP; varying vec3 vV; uniform float uF,uK,uL;
+    void main(){ float f=pow(1.-abs(dot(vN,vV)),2.); float lon=atan(vP.z,vP.x); float st=fract(vP.y*.6-uF*.8+sin(lon*9.)*.08); float lines=smoothstep(.9,1.,st)+smoothstep(.1,0.,st);
+      vec3 c=mix(vec3(.55,.6,.9),vec3(.6,.95,1.),uK)*(.25+lines*.55*(.3+uK))+vec3(1.,.8,.95)*f*(.7+uL*.8);
+      gl_FragColor=vec4(c,.55*f+.25+lines*.2); }` });
+const sph=new T.Mesh(new T.SphereGeometry(3.4,40,28),sphMat); core.add(sph);
+const sphHalo=new T.Sprite(SV.glow(0xffd8f0,.55)); sphHalo.scale.setScalar(18); core.add(sphHalo);
+const ringA=new T.Mesh(new T.TorusGeometry(5.6,.06,8,120),new T.MeshBasicMaterial({ color:0xff9fd8, transparent:true, opacity:.85, blending:T.AdditiveBlending, depthWrite:false })); ringA.rotation.x=1.2; core.add(ringA);
+const ringB=new T.Mesh(new T.TorusGeometry(6.6,.035,8,120),new T.MeshBasicMaterial({ color:0x8ff3ff, transparent:true, opacity:.6, blending:T.AdditiveBlending, depthWrite:false })); ringB.rotation.set(1.35,.3,0); core.add(ringB);
+// the waveform beam that rises when the song is whole (concept art: crystal lotus with a blue waveform)
+const beamTex=SV.canvasTex(64,512,(c,w,h)=>{ const g=c.createLinearGradient(0,0,w,0); g.addColorStop(0,'rgba(140,220,255,0)'); g.addColorStop(.5,'rgba(220,245,255,1)'); g.addColorStop(1,'rgba(140,220,255,0)'); c.fillStyle=g; c.fillRect(0,0,w,h);
+  c.strokeStyle='rgba(255,255,255,.95)'; c.lineWidth=3; c.beginPath(); for (let y=0;y<h;y+=2){ const x=w/2+Math.sin(y*.09)*Math.sin(y*.013)*w*.38; y?c.lineTo(x,y):c.moveTo(x,y); } c.stroke(); });
+beamTex.wrapT=T.RepeatWrapping;
+const beam=new T.Mesh(new T.CylinderGeometry(1.4,1.4,80,24,1,true),new T.MeshBasicMaterial({ map:beamTex, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, side:T.DoubleSide, fog:false })); beam.position.set(0,CEN.y+40,0); scene.add(beam);
+C5.interactables.push(lotus); lotus.userData={ kind:'lotus' };
+
+/* ---------- the seven flower stands where you place the fragments (concept art: glowing platform) ---------- */
+const padTex=SV.canvasTex(512,512,(c,w,h)=>{ c.translate(w/2,h/2); c.strokeStyle='rgba(255,255,255,.95)';
+  [[.46,5],[.40,2],[.30,3]].forEach(([r,lw])=>{ c.lineWidth=lw; c.beginPath(); c.arc(0,0,w*r,0,7); c.stroke(); });
+  for (let i=0;i<48;i++){ const a=i/48*6.283; c.lineWidth=i%4?2:5; c.beginPath(); c.moveTo(Math.cos(a)*w*.405,Math.sin(a)*w*.405); c.lineTo(Math.cos(a)*w*(i%4?.43:.45),Math.sin(a)*w*(i%4?.43:.45)); c.stroke(); }
+  const g=c.createRadialGradient(0,0,0,0,0,w*.3); g.addColorStop(0,'rgba(255,255,255,.55)'); g.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=g; c.beginPath(); c.arc(0,0,w*.3,0,7); c.fill(); });
+const PADS=[[0,30,4],[1.1,27,10],[2.05,33,-1],[3.0,28,7],[3.9,32,1],[4.8,27,12],[5.6,31,-3]].map(([a,d,y],i)=>{
+  const x=Math.sin(a)*d, z=Math.cos(a)*d; const g=island(x,y,z,4.2,9,{ seg:12, fall:i%2===0 });
+  const disc=new T.Mesh(new T.CircleGeometry(3.4,48),new T.MeshBasicMaterial({ map:padTex, color:0xffffff, transparent:true, opacity:.55, blending:T.AdditiveBlending, depthWrite:false })); disc.rotation.x=-Math.PI/2; disc.position.y=.47; g.add(disc);
+  const stem=new T.Mesh(new T.CylinderGeometry(.08,.16,2.4,6),new T.MeshStandardMaterial({ color:0xd8ccff, emissive:0x8070c0, emissiveIntensity:.6 })); stem.position.y=1.6; g.add(stem);
+  const cup=new T.Mesh(new T.TorusGeometry(.62,.05,8,40),new T.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:.7, blending:T.AdditiveBlending, depthWrite:false })); cup.rotation.x=Math.PI/2; cup.position.y=2.85; g.add(cup);
+  const beacon=new T.Sprite(SV.glow(0xffffff,.55)); beacon.position.y=2.9; beacon.scale.setScalar(3.4); g.add(beacon);
+  const pulse=new T.Mesh(new T.RingGeometry(3.3,3.55,64),new T.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, side:T.DoubleSide })); pulse.rotation.x=-Math.PI/2; pulse.position.y=.5; g.add(pulse);
+  g.userData={ kind:'pad', i }; C5.interactables.push(g);
+  return { g, disc, cup, beacon, pulse, i, frag:-1, socket:new T.Vector3(x,y+2.95,z), lvl:0, flowers:[] };
+});
+// small light flowers around every stand: they open as the layer plays
+const flGeo=new T.OctahedronGeometry(.22,0);
+PADS.forEach(p=>{ for (let k=0;k<6;k++){ const a=k/6*6.28+rnd()*.4, d=2.2+rnd()*1.3; const m=new T.Mesh(flGeo,SV.crystalMat(0xffffff,.8,.6)); m.position.set(Math.cos(a)*d,.75,Math.sin(a)*d); m.scale.set(.6,.6,.6); p.g.add(m); p.flowers.push(m); } });
+
+/* ---------- floating crystals, frozen petals, birds of light ---------- */
+const cryN=70, cryI=new T.InstancedMesh(new T.OctahedronGeometry(.6,0),SV.crystalMat(0xc9b6ff,.7,.6),cryN); const cry=[]; const o3=new T.Object3D();
+for (let i=0;i<cryN;i++){ const a=rnd()*6.28, d=16+rnd()*60; cry.push({ x:Math.cos(a)*d, y:-10+rnd()*36, z:Math.sin(a)*d, s:.4+rnd()*1.3, r:rnd()*6, sp:.3+rnd() }); } scene.add(cryI);
+const PN=700, pgeo=new T.BufferGeometry(), pa=new Float32Array(PN*3); for (let i=0;i<PN;i++){ const a=rnd()*6.28, d=rnd()*70; pa[i*3]=Math.cos(a)*d; pa[i*3+1]=-12+rnd()*40; pa[i*3+2]=Math.sin(a)*d; } pgeo.setAttribute('position',new T.BufferAttribute(pa,3));
+const petalsP=new T.Points(pgeo,new T.PointsMaterial({ map:SV.glowTex, color:0xffc8e8, size:.55, transparent:true, opacity:.8, blending:T.AdditiveBlending, depthWrite:false })); scene.add(petalsP);
+const BN=30, bgeo=new T.BufferGeometry(), ba=new Float32Array(BN*3); bgeo.setAttribute('position',new T.BufferAttribute(ba,3));
+const birds=new T.Points(bgeo,new T.PointsMaterial({ map:SV.glowTex, color:0xfff2c8, size:1.1, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false })); scene.add(birds);
+
+/* ---------- the five fragment crystals ---------- */
+const gemGeo=new T.OctahedronGeometry(.62,0);
+const gems=FR.map((f,i)=>{ const g=new T.Group(); const m=new T.Mesh(gemGeo,SV.crystalMat(f.hex,.92,1.1)); m.scale.set(1,1.5,1); g.add(m); const e=SV.edges(gemGeo,0xffffff,.8); e.scale.copy(m.scale); g.add(e);
+  const h=new T.Sprite(SV.glow(f.hex,.9)); h.scale.setScalar(3.2); g.add(h); g.visible=false; scene.add(g); return { g, m, h, i, state:'inv', from:new T.Vector3(), to:new T.Vector3(), t:0 }; });
+const HAND=new T.Vector3(.36,-.32,-1.05);
+
+/* ---------- the memory you finally face ---------- */
+function paintMemory(c,w,h,warm){
+  const bg=c.createLinearGradient(0,0,0,h); if (warm){ bg.addColorStop(0,'#3a2470'); bg.addColorStop(.55,'#b56ca8'); bg.addColorStop(1,'#ffcf9e'); } else { bg.addColorStop(0,'#141428'); bg.addColorStop(1,'#2c2c46'); }
+  c.fillStyle=bg; c.fillRect(0,0,w,h);
+  // spotlight
+  c.save(); const sg=c.createLinearGradient(0,0,0,h*.8); sg.addColorStop(0,warm?'rgba(255,240,210,.85)':'rgba(220,220,240,.55)'); sg.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=sg; c.beginPath(); c.moveTo(w*.47,0); c.lineTo(w*.53,0); c.lineTo(w*.66,h*.78); c.lineTo(w*.34,h*.78); c.closePath(); c.fill(); c.restore();
+  // stage
+  c.fillStyle=warm?'rgba(80,40,90,.85)':'rgba(30,30,44,.95)'; c.beginPath(); c.ellipse(w/2,h*.78,w*.36,h*.06,0,0,7); c.fill();
+  // the girl at the microphone
+  c.fillStyle=warm?'#2a1840':'#0a0a12'; c.beginPath(); c.arc(w/2,h*.47,h*.045,0,7); c.fill();
+  c.beginPath(); c.moveTo(w/2-h*.06,h*.75); c.quadraticCurveTo(w/2-h*.05,h*.53,w/2,h*.52); c.quadraticCurveTo(w/2+h*.05,h*.53,w/2+h*.06,h*.75); c.closePath(); c.fill();
+  c.strokeStyle=warm?'#2a1840':'#0a0a12'; c.lineWidth=4; c.beginPath(); c.moveTo(w/2+h*.09,h*.76); c.lineTo(w/2+h*.075,h*.52); c.stroke(); c.beginPath(); c.arc(w/2+h*.074,h*.5,h*.016,0,7); c.fill();
+  if (!warm){ c.rotate(0); c.strokeStyle='rgba(200,200,230,.45)'; c.lineWidth=3; c.setLineDash([10,16]); [1,2,3].forEach(k=>{ c.beginPath(); c.arc(w/2,h*.5,h*.1*k+h*.04,-2.6,-.55); c.stroke(); }); c.setLineDash([]);
+    c.font=`700 ${h*.05|0}px "Gowun Batang",serif`; c.fillStyle='rgba(220,220,240,.55)'; c.textAlign='center'; c.fillText('…',w/2,h*.3); }
+  else { const cols=FR.map(f=>f.col); cols.forEach((col,k)=>{ c.strokeStyle=col; c.globalAlpha=.85-k*.12; c.lineWidth=4; c.beginPath(); c.arc(w/2,h*.5,h*.12+k*h*.075,-2.9,-.25); c.stroke(); }); c.globalAlpha=1;
+    for (let i=0;i<40;i++){ c.fillStyle=cols[i%5]; c.globalAlpha=.7; c.beginPath(); c.arc(w*(.2+Math.random()*.6),h*(.12+Math.random()*.4),2+Math.random()*3,0,7); c.fill(); } c.globalAlpha=1; }
+  // audience
+  for (let row=0;row<3;row++) for (let i=0;i<16;i++){ const x=w*(.02+i/15*.96)+(row%2)*w*.03, y=h*(.9+row*.05); c.fillStyle=warm?`rgba(40,20,60,${.92-row*.1})`:'rgba(0,0,0,.95)'; c.beginPath(); c.arc(x,y,h*.045,Math.PI,0); c.fill(); c.fillRect(x-h*.045,y,h*.09,h*.06);
+    if (warm && row===0){ c.fillStyle='rgba(255,220,180,.35)'; c.beginPath(); c.arc(x,y-h*.01,h*.02,0,7); c.fill(); } }
+  // soft edges
+  c.globalCompositeOperation='destination-in'; const m=c.createRadialGradient(w/2,h/2,h*.42,w/2,h/2,w*.54); m.addColorStop(0,'rgba(0,0,0,1)'); m.addColorStop(1,'rgba(0,0,0,0)'); c.fillStyle=m; c.fillRect(0,0,w,h); c.globalCompositeOperation='source-over';
+}
+const memA=SV.canvasTex(1024,576,(c,w,h)=>paintMemory(c,w,h,false)), memB=SV.canvasTex(1024,576,(c,w,h)=>paintMemory(c,w,h,true));
+const memMatA=new T.MeshBasicMaterial({ map:memA, transparent:true, opacity:0, depthWrite:false, fog:false, side:T.DoubleSide }), memMatB=memMatA.clone(); memMatB.map=memB;
+const memWin=new T.Group(); const mA=new T.Mesh(new T.PlaneGeometry(30,16.9),memMatA), mB=new T.Mesh(new T.PlaneGeometry(30,16.9),memMatB); mB.position.z=.02; memWin.add(mA,mB); mA.renderOrder=20; mB.renderOrder=21; memMatA.depthTest=false; memMatB.depthTest=false; memWin.position.set(0,CEN.y+16,0); scene.add(memWin);
+
+/* =====================================================================
+   the song: one buffer, split into five layers (bands), each placed in 3D
+   ===================================================================== */
+const A={ buf:null, loading:null, src:null, built:false, bands:[], lvl:[0,0,0,0,0], hist:FR.map(()=>new Float32Array(160)), hp:0 };
+const SONG='music/sv_garden.mp3';
+function loadSong(){ if (A.buf) return Promise.resolve(A.buf); if (A.loading) return A.loading;
+  A.loading=fetch(SONG).then(r=>{ if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(b=>new Promise((res,rej)=>SV.AU.ctx.decodeAudioData(b,res,rej))).then(b=>(A.buf=b)).catch(e=>{ A.loading=null; throw e; });
+  return A.loading; }
+function lr4(c,type,f){ const a=c.createBiquadFilter(), b=c.createBiquadFilter(); [a,b].forEach(x=>{ x.type=type; x.frequency.value=f; x.Q.value=.7071; }); a.connect(b); return [a,b]; }
+function build(){
+  const c=SV.AU.ctx; if (A.built) return; A.built=true;
+  A.bus=c.createGain(); A.bus.gain.value=.92; A.bus.connect(SV.AU.master);
+  A.mAn=c.createAnalyser(); A.mAn.fftSize=2048; A.mAn.smoothingTimeConstant=.8; A.bus.connect(A.mAn);
+  A.ghostIn=c.createGain(); const glp=c.createBiquadFilter(); glp.type='lowpass'; glp.frequency.value=330; glp.Q.value=.4; A.ghost=c.createGain(); A.ghost.gain.value=0; A.ghostIn.connect(glp); glp.connect(A.ghost); A.ghost.connect(A.bus);
+  A.full=c.createGain(); A.full.gain.value=0; A.full.connect(A.bus);
+  A.bands=FR.map((f,i)=>{ const entry=c.createGain(); let head=entry;
+    if (f.band[0]){ const [a,b]=lr4(c,'highpass',f.band[0]); head.connect(a); head=b; }
+    if (f.band[1]){ const [a,b]=lr4(c,'lowpass',f.band[1]); head.connect(a); head=b; }
+    const an=c.createAnalyser(); an.fftSize=512; head.connect(an);
+    const g=c.createGain(); g.gain.value=0; head.connect(g);
+    const pan=c.createPanner(); pan.panningModel='HRTF'; pan.distanceModel='inverse'; pan.refDistance=9; pan.rolloffFactor=.9; pan.maxDistance=300;
+    const wet=c.createGain(), dry=c.createGain(); wet.gain.value=.8; dry.gain.value=.38; g.connect(pan); pan.connect(wet); wet.connect(A.bus); g.connect(dry); dry.connect(A.bus);
+    return { entry, an, g, pan, wet, dry, buf:new Float32Array(an.fftSize) }; });
+}
+function startSong(){
+  const c=SV.AU.ctx; if (!A.buf || A.src) return; build();
+  const s=c.createBufferSource(); s.buffer=A.buf; s.loop=true; s.connect(A.ghostIn); s.connect(A.full); A.bands.forEach(b=>s.connect(b.entry)); s.start(); A.src=s;
+  A.ghost.gain.setTargetAtTime(.3,c.currentTime,1.5); mixTargets(true);
+}
+function stopSong(){ if (!A.src) return; const c=SV.AU.ctx, s=A.src; A.src=null; [A.ghost,A.full,...A.bands.map(b=>b.g)].forEach(g=>g.gain.setTargetAtTime(0,c.currentTime,.25)); setTimeout(()=>{ try{ s.stop(); s.disconnect(); }catch(_){} },900); }
+function setPan(i,p){ const pn=A.bands[i]&&A.bands[i].pan; if (!pn) return; if (pn.positionX){ pn.positionX.value=p.x; pn.positionY.value=p.y; pn.positionZ.value=p.z; } else pn.setPosition(p.x,p.y,p.z); }
+function mixTargets(fast){
+  if (!A.built) return; const c=SV.AU.ctx, n=INV.used.size, tc=fast?.1:.9;
+  if (S.done){ A.bands.forEach(b=>b.g.gain.setTargetAtTime(0,c.currentTime,1.6)); A.full.gain.setTargetAtTime(1,c.currentTime,1.6); A.ghost.gain.setTargetAtTime(0,c.currentTime,1); return; }
+  A.bands.forEach((b,i)=>b.g.gain.setTargetAtTime(INV.used.has(i)?1:0,c.currentTime,tc));
+  A.ghost.gain.setTargetAtTime(.3*(1-n/5),c.currentTime,1.2);
+}
+
+/* =====================================================================
+   state & interaction
+   ===================================================================== */
+const S={ restore:0, restoreT:0, flow:0, done:false, doneT:-1, look:null };
+C5.flyOK=(x,y,z)=>{
+  if (y<-22 || y>46) return false; if (Math.hypot(x,z)>92) return false;
+  for (const s of solids){ const dx=x-s.x, dz=z-s.z, dy=s.y+1.3-y; if (dy<0 || dy>s.h+1.6) continue; const rr=s.r*(1-Math.max(0,dy-1.3)/(s.h+.3))+.7; if (dx*dx+dz*dz<rr*rr) return false; }
+  if (Math.hypot(x-core.position.x,y-core.position.y,z-core.position.z)<4.6) return false;
+  return true; };
+const REACH=12;
+function nextFree(){ for (let k=0;k<5;k++){ const i=(Math.max(0,INV.sel)+k)%5; if (!INV.used.has(i)) return i; } return -1; }
+function place(fi,pad){
+  if (INV.used.has(fi)){ const old=PADS[INV.used.get(fi)]; old.frag=-1; }
+  pad.frag=fi; INV.used.set(fi,pad.i); setPan(fi,pad.socket);
+  const G=gems[fi]; G.g.visible=true; G.from.copy(G.state==='pad'?G.g.position:handPos()); G.to.copy(pad.socket); G.t=0; G.state='toPad';
+  SV.AU.tone(pad.socket,{ f:[1318.5,880,523.25,659.25,987.77][fi], kind:'glass', dur:2.6, vol:.32 });
+  SV.wave(pad.socket.clone().setY(pad.socket.y-2.4),.55,{ color:FR[fi].hex, maxR:20, speed:12, src:'pad' }); SV.blip(pad.socket,FR[fi].col,1.2);
+  SV.memory('「'+FR[fi].layer+'」이(가) 이 자리에서 울리기 시작해요.','',3);
+  const nf=nextFree(); INV.sel=nf; INV.render(); mixTargets(); progress();
+}
+function pickUp(pad){
+  const fi=pad.frag; if (fi<0) return; pad.frag=-1; INV.used.delete(fi); const G=gems[fi]; G.from.copy(G.g.position); G.t=0; G.state='toHand';
+  INV.sel=fi; INV.render(); mixTargets(); progress(); SV.AU.tone(pad.socket,{ f:440, kind:'soft', dur:.6, vol:.18 });
+  SV.memory('「'+FR[fi].layer+'」을(를) 다시 손에 쥐었어요. 다른 자리에 놓아 보세요.','',3);
+}
+function progress(){
+  const n=INV.used.size; S.restoreT=n/5*.62; SV.pips(n,5);
+  el('mixN').textContent=n+' / 5';
+  if (n<5) SV.objective('기억의 조각을 꽃대에 놓아 노래를 완성해요 ('+n+'/5)', n===0?'1~5 키(또는 휠)로 조각을 고르고, 빛나는 꽃대를 바라보며 클릭해요. 놓인 자리에서 그 소리가 들려요.':'놓인 조각을 클릭하면 다시 집어서 다른 곳으로 옮길 수 있어요. 가까이 날아가면 그 소리가 더 크게 들려요.');
+  else if (!S.done){ S.done=true; SV.later(finale,1400); }
+}
+C5.interact=a=>{ const k=a.obj.userData.kind;
+  if (k==='pad'){ const pad=PADS[a.obj.userData.i]; if (a.dist>REACH){ SV.memory('조금 더 가까이 날아가요.','',2); return; } if (S.done) return;
+    if (pad.frag>=0){ pickUp(pad); return; }
+    const fi=INV.sel>=0?INV.sel:nextFree(); if (fi<0){ SV.memory('다섯 조각을 모두 놓았어요.','',2); return; }
+    if (gems[fi].state==='toPad' || gems[fi].state==='toHand') return; place(fi,pad); }
+  else if (k==='lotus' && !S.done) SV.memory('다섯 조각이 모두 울리면, 이 꽃이 피어나요.','',2.5);
+};
+C5.onWheel=(a,dir)=>{ if (S.done) return; let i=INV.sel<0?0:INV.sel; for (let k=0;k<5;k++){ i=(i+(dir>0?1:4))%5; if (!INV.used.has(i)) break; } INV.select(i); };
+C5.onSelect=()=>{ };
+C5.prompt=a=>{
+  if (!a) return ''; const k=a.obj.userData.kind;
+  if (k==='pad'){ const pad=PADS[a.obj.userData.i]; if (S.done) return '';
+    if (a.dist>REACH) return pad.frag>=0?'「'+FR[pad.frag].layer+'」 · 가까이 날아가요':'빈 꽃대 · 가까이 날아가요';
+    if (pad.frag>=0) return '<kbd>클릭</kbd> 「'+FR[pad.frag].layer+'」 다시 집기';
+    const fi=INV.sel>=0?INV.sel:nextFree(); return fi<0?'':'<kbd>클릭</kbd> '+FR[fi].name+' 놓기 · 「'+FR[fi].layer+'」'; }
+  if (k==='lotus') return S.done?'':'닫힌 크리스털 꽃 · 조각 '+INV.used.size+'/5';
+  return ''; };
+C5.listenSources=()=>PADS.map(p=>({ pos:p.socket, col:p.frag>=0?FR[p.frag].col:'#ffffff' }));
+function handPos(){ return V2.copy(HAND).applyQuaternion(SV.camera.quaternion).add(SV.camera.position); }
+
+/* ---------- the finale: colour and motion return, and you face the memory ---------- */
+function finale(){
+  const c=SV.AU.ctx; mixTargets(); S.restoreT=1; S.doneT=0; SV.flash(.7); SV.shake=.8;
+  SV.AU.tone(core.position,{ f:523.25, kind:'bell', dur:6, vol:.35 }); SV.AU.ambient({ wind:.25, birds:.9, pad:0, drip:0 }); SV.AU.hearing(1);
+  gems.forEach((G,i)=>{ G.from.copy(G.g.position); G.t=0; G.state='toCore'; });
+  SV.objective('노래가 완성됐어요','멈춰 있던 하늘에 색과 움직임이 돌아오고 있어요.');
+  SV.later(()=>SV.memory('들려… 이건, 내가 만든 노래야.','',4.5),1600);
+  SV.later(()=>{ S.look=core.position.clone(); SV.P.frozen=true; el('mixPnl').hidden=true; },6200);
+  SV.later(()=>SV.memory('기억났어. 그날, 무대 위에서 내 목소리가 들리지 않았어.','',5.5),7200);
+  SV.later(()=>SV.memory('모두가 나를 보고 있었는데, 나는 아무것도 들을 수 없었어.<br>그래서… 도망쳤어.','',5.5),13000);
+  SV.later(()=>{ S.warm=true; SV.memory('그 뒤로 나는 소리에 등을 돌렸어. 들리지 않는 게 무서워서.','',5.5); },18800);
+  SV.later(()=>SV.memory('아직 모든 소리가 다 들리진 않아.<br>그래도 이제는 알아. 소리는 내 안에서도 울릴 수 있다는 걸.','',6),24600);
+  SV.later(()=>SV.memory('들리는 만큼, 들리는 대로 — 다시 노래해 볼래.<br>이건 나만의 노래니까.','',6.5),31000);
+  SV.later(()=>{ S.look=null; SV.P.frozen=false; S.memOut=true; el('mixPnl').hidden=false; SV.card('FINAL CHAPTER COMPLETE','나만의 음악','청력이 완전히 돌아온 건 아니에요. 하지만 이제 소리 앞에서 도망치지 않아요.',6); },37800);
+  SV.later(()=>{ document.exitPointerLock&&document.exitPointerLock(); SV.playing=false; el('hud').hidden=true; INV.toggle(false);
+    el('endE').textContent='Prototype · Final Chapter'; el('endT').textContent='소리의 정원 — 나만의 음악';
+    el('endP').innerHTML='다섯 개의 기억의 조각이 노래의 다섯 겹이 되었어요.<br>박동과 화음, 멜로디와 목소리, 그리고 반짝이는 공간까지 — 서로 다른 높이의 소리가 겹쳐 하나의 음악이 돼요.<br><br>소리는 돌아왔지만, 모든 게 예전처럼 들리진 않아요.<br>그래도 주인공은 이제 들리는 만큼, 자신의 목소리로 노래하기로 했어요.';
+    el('learn').innerHTML='<div><b>음악의 구성</b>낮은 박동과 화음이 바닥을 받치고, 멜로디와 목소리가 가운데를, 높은 반짝임이 공간을 채워요. 한 겹씩 더할 때마다 노래가 두꺼워져요.</div><div><b>소리의 조화 · 3D 배치</b>같은 노래라도 각 겹을 어디에 두느냐에 따라 들리는 방향과 크기가 달라져요. 가까이 날아가면 그 겹이 또렷해져요.</div>';
+    el('toFinalBtn').hidden=true; el('keepBtn').hidden=false; el('ch2AgainBtn').hidden=true; el('end').hidden=false; },45000);
+}
+
+/* =====================================================================
+   per frame
+   ===================================================================== */
+const mixCv=el('mix'), mg=mixCv.getContext('2d'); let mixTick=0;
+function drawMix(){
+  const w=mixCv.width, h=mixCv.height; mg.clearRect(0,0,w,h); const rowH=64, top=4, lx=128;
+  // tracks from the highest layer to the lowest, like a score
+  const order=[0,4,1,3,2];
+  order.forEach((fi,r)=>{ const f=FR[fi], y=top+r*rowH, on=INV.used.has(fi)||S.done, sel=INV.sel===fi&&!S.done;
+    mg.fillStyle=sel?'rgba(255,255,255,.07)':'rgba(255,255,255,.03)'; mg.fillRect(0,y,w,rowH-6);
+    mg.save(); mg.translate(18,y+rowH/2-3); mg.rotate(Math.PI/4); mg.fillStyle=on?f.col:'rgba(0,0,0,0)'; mg.strokeStyle=f.col; mg.lineWidth=2; mg.fillRect(-7,-7,14,14); mg.strokeRect(-7,-7,14,14); mg.restore();
+    mg.textAlign='left'; mg.fillStyle=on?'#fff':'rgba(220,220,240,.55)'; mg.font='700 19px "Noto Sans KR",sans-serif'; mg.fillText(f.layer,36,y+27);
+    mg.fillStyle='rgba(200,200,230,.65)'; mg.font='500 14px "Noto Sans KR",sans-serif'; mg.fillText((fi+1)+' · '+f.name,36,y+48);
+    const H=A.hist[fi], x0=lx+60, ww=w-x0-10, mid=y+rowH/2-3;
+    if (!on){ mg.strokeStyle='rgba(200,190,255,.28)'; mg.setLineDash([6,8]); mg.beginPath(); mg.moveTo(x0,mid); mg.lineTo(x0+ww,mid); mg.stroke(); mg.setLineDash([]); mg.fillStyle='rgba(200,200,230,.5)'; mg.font='500 13px "Noto Sans KR",sans-serif'; mg.fillText('빈 자리 — 꽃대에 놓으면 울려요',x0+8,mid-8); return; }
+    mg.fillStyle=f.col; mg.globalAlpha=.9; for (let k=0;k<H.length;k++){ const v=Math.min(1,H[k]*3.2)*(rowH*.42); mg.fillRect(x0+k*ww/H.length,mid-v,ww/H.length*.7,v*2+1); } mg.globalAlpha=1; });
+  // spectrum: which heights of sound are filled
+  const sy=top+5*rowH+8, sh=h-sy-6; mg.fillStyle='rgba(255,255,255,.03)'; mg.fillRect(0,sy,w,sh);
+  if (A.mAn){ const fr=new Uint8Array(A.mAn.frequencyBinCount); A.mAn.getByteFrequencyData(fr); const ny=SV.AU.ctx.sampleRate/2, N=72;
+    for (let k=0;k<N;k++){ const fq=40*Math.pow(16000/40,k/(N-1)), bi=Math.min(fr.length-1,Math.round(fq/ny*fr.length)), v=fr[bi]/255;
+      const fi=FR.findIndex(f=>(!f.band[0]||fq>=f.band[0])&&(!f.band[1]||fq<f.band[1])); const on=INV.used.has(fi)||S.done;
+      mg.fillStyle=on?FR[fi].col:'rgba(200,200,220,.35)'; mg.globalAlpha=on?.95:.5; const bh=Math.max(2,v*(sh-30)); mg.fillRect(8+k*(w-16)/N,sy+sh-8-bh,(w-16)/N*.7,bh); } mg.globalAlpha=1; }
+  mg.fillStyle='rgba(200,200,230,.7)'; mg.font='500 13px "Noto Sans KR",sans-serif'; mg.textAlign='left'; mg.fillText('낮은 소리',10,sy+18); mg.textAlign='right'; mg.fillText('높은 소리',w-10,sy+18);
+}
+C5.update=(dt,t)=>{
+  const P=SV.P;
+  S.restore=lerp(S.restore,S.restoreT,Math.min(1,dt*(S.done?.35:.8))); const k=S.restore;
+  SV.post.uniforms.uSat.value=.06+k*1.02; SV.post.uniforms.uGlow.value=.32+.5*k; SV.post.uniforms.uTint.value.setScalar(.7+.3*k);
+  S.flow+=dt*(.04+k*1.0);
+  skyMat.uniforms.uT.value=t; skyMat.uniforms.uK.value=k; cloudMat.uniforms.uF.value=S.flow*.12; cloudMat.uniforms.uK.value=k;
+  fallMat.uniforms.uF.value=S.flow*.9; fallMat.uniforms.uK.value=k; sphMat.uniforms.uF.value=S.flow; sphMat.uniforms.uK.value=k;
+  puffs.forEach(s=>{ s.userData.a+=dt*.004*k; s.position.x=Math.cos(s.userData.a)*s.userData.d; s.position.z=Math.sin(s.userData.a)*s.userData.d; });
+  // audio levels
+  if (A.built){ A.bands.forEach((b,i)=>{ b.an.getFloatTimeDomainData(b.buf); let s=0; for (let j=0;j<b.buf.length;j++) s+=b.buf[j]*b.buf[j]; const r=Math.sqrt(s/b.buf.length); A.lvl[i]=lerp(A.lvl[i],r,.35); });
+    if ((mixTick=(mixTick+1)%2)===0) A.hist.forEach((H,i)=>{ H.copyWithin(0,1); H[H.length-1]=A.lvl[i]; }); }
+  const beat=Math.min(1,A.lvl[2]*4);
+  // floating crystals and petals move only as the music returns
+  cry.forEach((c,i)=>{ c.r+=dt*c.sp*(.03+k); o3.position.set(c.x,c.y+Math.sin(S.flow*c.sp+i)*.8,c.z); o3.rotation.set(c.r*.4,c.r,0); o3.scale.set(c.s,c.s*1.6,c.s); o3.updateMatrix(); cryI.setMatrixAt(i,o3.matrix); }); cryI.instanceMatrix.needsUpdate=true;
+  if (k>.02){ for (let i=0;i<PN;i++){ pa[i*3]+=Math.sin(S.flow*.5+i)*dt*.6*k; pa[i*3+1]-=dt*.5*k; pa[i*3+2]+=dt*.9*k; if (pa[i*3+1]<-14) pa[i*3+1]=28; if (pa[i*3+2]>70) pa[i*3+2]=-70; } pgeo.attributes.position.needsUpdate=true; }
+  isl.forEach((g,i)=>{ g.position.y=solids[i].y-.45+Math.sin(S.flow*.4+i)*.5; });
+  // pads: each placed layer pulses with its own sound
+  PADS.forEach(p=>{ const fi=p.frag, on=fi>=0; const L=on?Math.min(1,A.lvl[fi]*(fi===2?4:6)):0; p.lvl=lerp(p.lvl,L,.3);
+    const col=on?FR[fi].hex:0xffffff; p.disc.material.color.set(col); p.disc.material.opacity=on?.6+p.lvl*.4:.35+.12*Math.sin(t*2+p.i); p.disc.rotation.z+=dt*(on?.4:.03);
+    p.beacon.material.color.set(col); p.beacon.scale.setScalar(on?3+p.lvl*3:2.4+.4*Math.sin(t*2.4+p.i)); p.cup.material.color.set(col);
+    p.pulse.material.color.set(col); const ph=(t*1.2+p.i*.3)%1; p.pulse.scale.setScalar(1+ph*(on?1.4+p.lvl:.6)); p.pulse.material.opacity=(1-ph)*(on?.5+p.lvl*.4:.12);
+    p.flowers.forEach((m,j)=>{ const tg=on?.9+p.lvl*.6:.45; m.scale.y=lerp(m.scale.y,tg*1.8,.1); m.scale.x=m.scale.z=lerp(m.scale.x,tg,.1); m.material.color.set(col); m.material.emissive.set(col); m.rotation.y+=dt*(on?1:.1); }); });
+  // the fragment crystals
+  const hp=handPos().clone();
+  gems.forEach((G,i)=>{ const g=G.g;
+    if (G.state==='inv'){ g.visible=INV.sel===i && !INV.used.has(i) && SV.playing; if (g.visible){ g.position.lerp(hp,Math.min(1,dt*14)); g.scale.setScalar(.42); } }
+    else if (G.state==='toPad'){ G.t+=dt/.9; const e=Math.min(1,G.t); g.position.lerpVectors(G.from,G.to,e*e*(3-2*e)); g.position.y+=Math.sin(e*Math.PI)*3; g.scale.setScalar(lerp(.42,1,e)); g.visible=true; if (e>=1) G.state='pad'; }
+    else if (G.state==='toHand'){ G.t+=dt/.6; const e=Math.min(1,G.t); g.position.lerpVectors(G.from,hp,e); g.scale.setScalar(lerp(1,.42,e)); if (e>=1) G.state='inv'; }
+    else if (G.state==='pad'){ const p=PADS[INV.used.get(i)]; if (p){ g.position.copy(p.socket); g.position.y+=.25+Math.sin(t*2+i)*.12+p.lvl*.3; g.scale.setScalar(1+p.lvl*.35); } }
+    else if (G.state==='toCore'){ G.t+=dt/3.2; const e=Math.min(1,G.t); const a=i/5*6.283+t*.6, orbit=V.set(core.position.x+Math.cos(a)*7.5,core.position.y+Math.sin(t*1.3+i)*1.2,core.position.z+Math.sin(a)*7.5); g.position.lerpVectors(G.from,orbit,e*e*(3-2*e)); g.scale.setScalar(1.2+A.lvl[i]*1.5); g.visible=true; }
+    G.m.rotation.y+=dt*1.2; });
+  // the lotus, sphere, beam
+  const bloom=S.done?Math.min(1,S.doneT/6):INV.used.size/5*.25; if (S.done) S.doneT+=dt;
+  petals.forEach(p=>{ const target=p.base+bloom*(.95-p.ring*.18); p.tilt.rotation.z=lerp(p.tilt.rotation.z,-target,.05); });
+  lotus.rotation.y+=dt*.05*(.2+k);
+  core.rotation.y+=dt*.12*(.1+k); ringA.rotation.z+=dt*.3*(.05+k); ringB.rotation.z-=dt*.22*(.05+k);
+  sphMat.uniforms.uL.value=S.done?beat:INV.used.size/5*beat; sphHalo.scale.setScalar(16+beat*6*k);
+  beam.material.opacity=lerp(beam.material.opacity,S.done?(S.look?.12:.55+beat*.35):0,.03); beamTex.offset.y-=dt*.4;
+  // birds of light circle the garden when the song is whole
+  birds.material.opacity=lerp(birds.material.opacity,S.done?.9:0,.02);
+  if (S.done){ for (let i=0;i<BN;i++){ const fl=i%3, a=t*(.25+fl*.07)+i*.21+fl*2, rr=26+fl*14+Math.sin(i)*2; ba[i*3]=Math.cos(a)*rr; ba[i*3+1]=6+fl*7+Math.sin(t*2+i)*.8; ba[i*3+2]=Math.sin(a)*rr; } bgeo.attributes.position.needsUpdate=true; }
+  // the memory window faces you
+  const mo=S.done&&S.doneT>6&&!S.memOut?1:0; memMatA.opacity=lerp(memMatA.opacity,mo*(S.warm?0:1),Math.min(1,dt*1.6)); memMatB.opacity=lerp(memMatB.opacity,mo*(S.warm?1:0),Math.min(1,dt*1.1));
+  if (S.memOut){ memMatA.opacity=lerp(memMatA.opacity,0,.05); memMatB.opacity=lerp(memMatB.opacity,0,.02); }
+  memWin.visible=memMatA.opacity+memMatB.opacity>.01; if (memWin.visible){ memWin.position.set(core.position.x,core.position.y,core.position.z); memWin.lookAt(SV.camera.position); memWin.translateZ(Math.min(20,Math.max(6,SV.camera.position.distanceTo(core.position)-24))); }
+  if (S.look){ const dx=S.look.x-P.pos.x, dy=S.look.y-P.pos.y, dz=S.look.z-P.pos.z; const ty=Math.atan2(-dx,-dz), tp=Math.atan2(dy,Math.hypot(dx,dz)); let d=ty-P.yaw; d=Math.atan2(Math.sin(d),Math.cos(d)); P.yaw+=d*Math.min(1,dt*1.6); P.pitch=lerp(P.pitch,tp,Math.min(1,dt*1.6)); P.vel.multiplyScalar(.9); }
+  if (el('mixPnl').hidden===false) drawMix();
+};
+
+/* ---------- enter / exit ---------- */
+C5.enter=()=>{
+  const P=SV.P; P.pos.set(0,7,52); P.yaw=0; P.pitch=-.08; P.frozen=false; P.vel.set(0,0,0);
+  Object.assign(S,{ restore:0, restoreT:0, flow:0, done:false, doneT:-1, look:null, warm:false, memOut:false });
+  INV.mode='garden'; INV.assumed=true; INV.used.clear(); INV.sel=0;
+  PADS.forEach(p=>{ p.frag=-1; p.lvl=0; }); gems.forEach(G=>{ G.state='inv'; G.g.visible=false; G.t=0; });
+  petals.forEach(p=>p.tilt.rotation.z=-p.base); memMatA.opacity=0; memMatB.opacity=0; beam.material.opacity=0; birds.material.opacity=0;
+  SV.orb.state='none'; SV.orb.mesh.visible=false;
+  SV.chapterLabel('Final Chapter','소리의 정원 — 나만의 음악'); SV.pips(0,5); el('mixN').textContent='0 / 5'; el('mixPnl').hidden=false;
+  el('keys').innerHTML='<kbd>W A S D</kbd> 날기 · <kbd>마우스</kbd> 방향 · <kbd>Space</kbd> 위로 · <kbd>C</kbd> 아래로<br><kbd>Shift</kbd> 빠르게 날기 · <kbd>1</kbd>~<kbd>5</kbd>/<kbd>휠</kbd> 조각 고르기<br><kbd>클릭</kbd> 놓기 · 다시 집기 · <kbd>Tab</kbd> 기억의 조각 · <kbd>우클릭</kbd> 소리의 자리';
+  SV.post.uniforms.uSat.value=.06; SV.AU.hearing(.55,.1); SV.AU.ambient({ wind:.35, drip:0, birds:0, pad:0 },.1);
+  INV.render();
+  SV.card('FINAL CHAPTER','소리의 정원','나만의 음악 — 하늘 위, 모든 것이 멈춰 있는 정원',4.5);
+  SV.objective('노래를 불러오는 중…','');
+  loadSong().then(()=>{ if (SV.chapter!==C5) return; startSong(); progress(); }).catch(()=>{ SV.objective('노래를 불러오지 못했어요','인터넷 연결을 확인하고 다시 시도해 주세요. 조각은 그대로 놓을 수 있어요.'); });
+  SV.later(()=>SV.memory('하늘 위의 정원… 아무것도 움직이지 않아.<br>멀리서 내 노래가 아주 작게, 먹먹하게 들려.','',6),1800);
+  SV.later(()=>{ SV.INV.award('voice'); },7600);
+  SV.later(()=>{ SV.memory('손에 쥔 소리 구슬이 다섯 번째 조각이 되었어요 — 나의 목소리.','',4.5); progress(); },12400);
+};
+C5.exit=()=>{ stopSong(); SV.post.uniforms.uTint.value.setScalar(1); SV.post.uniforms.uGlow.value=.55; el('mixPnl').hidden=true; SV.P.frozen=false; gems.forEach(G=>G.g.visible=false); INV.reset();
+  el('keys').innerHTML=KEYS0; };
+const KEYS0=el('keys').innerHTML;
+C5._dbg=()=>({ a:+memMatA.opacity.toFixed(2), b:+memMatB.opacity.toFixed(2), vis:memWin.visible, wp:memWin.position.toArray().map(v=>+v.toFixed(1)), cam:SV.camera.position.toArray().map(v=>+v.toFixed(1)), yaw:+SV.P.yaw.toFixed(2), pitch:+SV.P.pitch.toFixed(2), doneT:+S.doneT.toFixed(1), look:!!S.look, core:core.position.toArray() });
+SV.C5=C5;
+})();
+</script>
+<script>
 (function(){
 'use strict';
 const el=id=>document.getElementById(id), P=SV.P;
@@ -1069,7 +1580,7 @@ const _set=SV.setChapter; SV.setChapter=C=>{ SV.gen++; _set(C); };
 SV.goChapter=n=>{
   SV.quiet=false; el('end').hidden=true; el('title').hidden=true; el('hud').hidden=false;
   P.keys={}; P.listen=false; P.frozen=false; SV.playing=true;
-  SV.setChapter(n===2?SV.C2:SV.C1);
+  SV.setChapter(n===5?SV.C5:n===2?SV.C2:SV.C1);
   try{ history.replaceState(null,'','#ch'+n); }catch(_){}
 };
 function begin(n){
@@ -1082,6 +1593,9 @@ el('startBtn').onclick=()=>begin(1);
 el('ch2Btn').onclick=()=>begin(2);
 el('againBtn').onclick=()=>begin(1);
 el('ch2AgainBtn').onclick=()=>begin(2);
+el('ch5Btn').onclick=()=>begin(5);
+el('toFinalBtn').onclick=()=>begin(5);
+el('keepBtn').onclick=()=>{ el('end').hidden=true; el('hud').hidden=false; SV.playing=true; P.frozen=false; lock(); };
 
 /* title backdrop: the silent forest, slowly turning */
 let attract=true;
@@ -1091,7 +1605,7 @@ P.pos.set(2,1.7,8); P.yaw=.25; P.pitch=.02;
 SV.loop();
 
 /* deep link: #ch2 skips the title button choice but still needs a click for audio */
-if (/ch2/.test(location.hash)) el('ch2Btn').classList.add('main');
+if (/ch2/.test(location.hash)) el('ch2Btn').classList.add('main'); if (/ch5/.test(location.hash)) el('ch5Btn').classList.add('main');
 addEventListener('keydown',e=>{ if (e.code==='Escape' && SV.playing) el('lockhint').hidden=P.noLock; });
 })();
 </script>
