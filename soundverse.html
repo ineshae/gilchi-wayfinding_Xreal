@@ -59,6 +59,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55))}
 .lockhint{position:absolute;left:50%;top:58%;transform:translateX(-50%);padding:10px 16px;border-radius:999px;background:rgba(10,10,24,.7);border:1px solid var(--edge-2);font-size:13.5px;pointer-events:none}
 
+.backbtn{position:absolute;left:max(18px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));pointer-events:auto;padding:8px 14px;border-radius:999px;border:1px solid var(--edge-2);background:rgba(10,10,24,.62);color:var(--ink);font:700 13px/1 var(--body);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:background .2s}
+.backbtn:hover{background:rgba(60,50,110,.75)}
+.hud .obj{top:calc(max(16px,env(safe-area-inset-top)) + 44px)}
 /* ---------- overlays ---------- */
 .ov{position:fixed;inset:0;display:grid;place-items:center;padding:24px;overflow:auto;-webkit-user-select:text;user-select:text}
 .title{background:radial-gradient(900px 600px at 50% 40%,rgba(120,100,255,.18),transparent 70%),radial-gradient(700px 500px at 70% 80%,rgba(255,120,200,.10),transparent 70%),rgba(4,4,10,.72)}
@@ -148,6 +151,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 <div class="speed" id="speed"></div>
 
 <div class="hud" id="hud" hidden>
+  <button class="backbtn" id="backBtn" type="button" title="챕터 선택으로 돌아가기 (Esc로 마우스를 푼 뒤 클릭, 또는 Backspace)">← 챕터 선택</button>
   <div class="obj" id="obj"><div class="lb">지금 할 일</div><div class="tx" id="objT"></div><div class="sub" id="objS"></div></div>
   <div class="chap"><div class="c1" id="chapE">Chapter 1</div><div class="c2" id="chapT">침묵의 숲</div><div class="pips" id="pips"></div></div>
   <div class="cross" aria-hidden="true"><svg viewBox="-23 -23 46 46"><circle class="rg" r="12"/><circle class="dot" r="2.2"/><path class="ch" id="charge" d=""/></svg></div>
@@ -161,7 +165,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     <div class="pnl" id="mixPnl" hidden><div class="lb">음악의 구성 · 소리의 조화 <b id="mixN"></b></div><canvas id="mix" width="660" height="472"></canvas></div>
     <div class="pnl" id="pitchPnl" hidden><div class="lb">음높이 <b id="pitchN"></b></div><canvas id="pitch" width="600" height="192"></canvas></div>
   </div>
-  <div class="lockhint" id="lockhint" hidden>화면을 클릭하면 다시 둘러볼 수 있어요</div>
+  <div class="lockhint" id="lockhint" hidden>화면을 클릭하면 다시 둘러볼 수 있어요 · 왼쪽 위 <b>← 챕터 선택</b>으로 나갈 수 있어요</div>
 </div>
 
 <div class="invpanel" id="invPanel" aria-hidden="true"><div class="invbox"><h3>기억의 조각</h3><div class="sub" id="invSub">챕터를 하나씩 마칠 때마다 조각이 하나씩 모여요. 다섯 조각이 모이면, 나만의 노래가 완성돼요.</div><div class="frags" id="frags"></div></div></div>
@@ -202,7 +206,7 @@ button{font:inherit;color:inherit;cursor:pointer}
       <div><b>침묵의 숲 · 소리의 방향</b>소리는 퍼져 나가며 멀어질수록 작아지고, 양쪽 귀에 닿는 차이로 방향을 알 수 있어요.</div>
       <div><b>공명의 동굴 · 소리의 높낮이</b>작은 크리스털일수록 높은 소리. 두 소리의 주파수가 같아지면 맥놀이가 사라지고 공명해요.</div>
     </div>
-    <div class="btns"><button class="btn main" id="toFinalBtn" type="button">Final · 소리의 정원으로</button><button class="btn" id="keepBtn" type="button" hidden>정원에 남아 계속 날기</button><button class="btn" id="againBtn" type="button">처음부터 다시</button><button class="btn" id="ch2AgainBtn" type="button">Chapter 2 다시</button></div>
+    <div class="btns"><button class="btn main" id="toFinalBtn" type="button">Final · 소리의 정원으로</button><button class="btn" id="keepBtn" type="button" hidden>정원에 남아 계속 날기</button><button class="btn" id="endBackBtn" type="button">← 챕터 선택</button><button class="btn" id="againBtn" type="button">처음부터 다시</button><button class="btn" id="ch2AgainBtn" type="button">Chapter 2 다시</button></div>
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1599,6 +1603,22 @@ el('againBtn').onclick=()=>begin(1);
 el('ch2AgainBtn').onclick=()=>begin(2);
 el('ch5Btn').onclick=()=>begin(5);
 el('toFinalBtn').onclick=()=>begin(5);
+/* back to the SOUNDRE:VERSE title, where any chapter can be chosen again */
+function goTitle(){
+  try{ document.exitPointerLock&&document.exitPointerLock(); }catch(_){}
+  SV.playing=false; SV.INV.toggle(false); P.keys={}; P.listen=false;
+  SV.fadeTo(()=>{
+    el('end').hidden=true; el('hud').hidden=true; el('lockhint').hidden=true;
+    ['mem','card'].forEach(id=>el(id).classList.remove('on')); el('fragPop').classList.remove('on','fly');
+    SV.quiet=true; SV.setChapter(SV.C1); SV.quiet=true; P.frozen=false;
+    P.pos.set(2,1.7,8); P.yaw=.25; P.pitch=.02; attract=true; el('title').hidden=false;
+    try{ history.replaceState(null,'',location.pathname); }catch(_){}
+  },.7);
+}
+SV.goTitle=goTitle;
+el('backBtn').onclick=goTitle;
+el('endBackBtn').onclick=goTitle;
+addEventListener('keydown',e=>{ if (e.code==='Backspace' && SV.playing){ e.preventDefault(); goTitle(); } });
 el('keepBtn').onclick=()=>{ el('end').hidden=true; el('hud').hidden=false; SV.playing=true; P.frozen=false; lock(); };
 
 /* title backdrop: the silent forest, slowly turning */
