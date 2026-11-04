@@ -406,10 +406,30 @@ SV.release=function(fromKey){
   const held=SV.t-orb.pressT, power=clamp(orb.charge,0,1);
   throwOrb(Math.max(.12,power), held<.18 && !fromKey);
 };
+/* the orb hums while it flies: faint far from the crystals, stronger the closer it gets */
+SV.orbProximity=function(p){
+  const C=SV.chapter; if (!C || !C.orbTargets) return .5; const L=C.orbTargets(); if (!L.length) return 0;
+  let d=1e9; for (const q of L) d=Math.min(d,p.distanceTo(q));
+  const R=C.orbRange||24, k=clamp(1-(d-1.2)/(R-1.2),0,1); return k*k*(3-2*k); };
+const hum={ n:null, k:0 };
+function humStart(){
+  if (!AU.ctx || hum.n) return; const c=AU.ctx, f=(SV.chapter&&SV.chapter.orbNote)||523.3;
+  const o=c.createOscillator(), o2=c.createOscillator(), lfo=c.createOscillator(), g2=c.createGain(), lg=c.createGain(), trem=c.createGain(), g=c.createGain();
+  o.type='sine'; o.frequency.value=f*2; o2.type='triangle'; o2.frequency.value=f*3.01; g2.gain.value=.22; o2.connect(g2);
+  lfo.frequency.value=6; lg.gain.value=.3; lfo.connect(lg); trem.gain.value=.7; lg.connect(trem.gain); o.connect(trem); g2.connect(trem);
+  g.gain.value=.0001; trem.connect(g); const p=pannerAt(orb.pos); g.connect(p); p.connect(AU.inner); const s=c.createGain(); s.gain.value=.25; g.connect(s); s.connect(AU.verbIn);
+  [o,o2,lfo].forEach(x=>x.start()); hum.n={ o,o2,lfo,g,p,f }; hum.k=0; }
+function humSet(pos,k){
+  const h=hum.n; if (!h) return; const c=AU.ctx, t=c.currentTime;
+  if (h.p.positionX){ h.p.positionX.value=pos.x; h.p.positionY.value=pos.y; h.p.positionZ.value=pos.z; } else h.p.setPosition(pos.x,pos.y,pos.z);
+  h.g.gain.setTargetAtTime(.008+.3*k*k,t,.05); h.o.frequency.setTargetAtTime(h.f*2*(1+.05*k),t,.08); h.lfo.frequency.setTargetAtTime(6+8*k,t,.1); }
+function humStop(){ const h=hum.n; if (!h) return; hum.n=null; const c=AU.ctx; h.g.gain.setTargetAtTime(.0001,c.currentTime,.08); setTimeout(()=>{ try{ h.o.stop(); h.o2.stop(); h.lfo.stop(); }catch(_){} },500); }
+SV.humStop=humStop;
 function throwOrb(power){
   if (orb.state!=='held') return;
   camera.getWorldDirection(V); orb.vel.copy(V).multiplyScalar(7+15*power); orb.vel.y+=2+2.5*power; orb.power=power; orb.state='fly'; orb.flyT=0;
   AU.tone(orb.pos,{ f:880+power*220, kind:'soft', dur:.25, vol:.08, glide:.6, verb:false });
+  humStart();
   SV.chapter && SV.chapter.onThrow && SV.chapter.onThrow(power);
 }
 const HAND=new T.Vector3(.34,-.29,-.95);
@@ -423,7 +443,7 @@ function orbTick(dt){
     const k=orb.pressing?orb.charge:0; u.chargeRing.material.opacity=k*.9; u.chargeRing.scale.setScalar(1+k*1.4); u.chargeRing.lookAt(camera.position); m.scale.setScalar((1+k*.35)*.48);
     // shaking the held orb (wiggling the mouse while pressing) makes it hum
   } else if (orb.state==='fly'){
-    orb.flyT+=dt; const prev=orb.pos.clone(); orb.vel.y-=9.8*.75*dt; orb.pos.addScaledVector(orb.vel,dt); m.position.copy(orb.pos); m.scale.setScalar(1);
+    orb.flyT+=dt; const prev=orb.pos.clone(); orb.vel.y-=9.8*.75*dt; orb.pos.addScaledVector(orb.vel,dt); m.position.copy(orb.pos); hum.k=lerp(hum.k,SV.orbProximity(orb.pos),Math.min(1,dt*10)); humSet(orb.pos,hum.k); m.scale.setScalar(.85+.45*hum.k); u.halo.material.opacity=.3+.7*hum.k;
     spawnTrail(orb.pos);
     const hit=SV.chapter.collide(orb.pos,prev);
     if (hit || orb.flyT>4){ const h=hit||{ point:orb.pos.clone(), kind:'air' }; impact(h); }
@@ -442,11 +462,11 @@ function orbTick(dt){
 let trailI=0, trailT=0;
 function spawnTrail(p){ trailT-=1/60; if (trailT>0) return; trailT=.02; const t=orb.trail[trailI++%orb.trail.length]; t.s.position.copy(p); t.life=1; t.s.visible=true; }
 function impact(h){
-  orb.state='gone'; orb.mesh.visible=false; orb.backT=SV.t+.55;
+  orb.state='gone'; orb.mesh.visible=false; orb.backT=SV.t+.55; humStop();
   const p=h.point.clone(); if (h.kind!=='water') p.y=Math.max(p.y,.05);
-  const power=orb.power||.3;
+  const power=orb.power||.3, near=h.kind==='echo'||h.kind==='crystal'||h.kind==='gate'||h.kind==='flower'?1:SV.orbProximity(p);
   SV.wave(p,power,{ water:h.kind==='water', color:SV.chapter.waveColor||0x9fe7ff });
-  if (!h.silent) AU.tone(p,{ f:SV.chapter.orbNote||523.3, kind:'bell', dur:1.6+power*2.2, vol:.35+power*.4 });
+  if (!h.silent) AU.tone(p,{ f:SV.chapter.orbNote||523.3, kind:'bell', dur:1.6+power*2.2, vol:(.35+power*.4)*(.15+.85*near) });
   SV.blip(p,'#9fe7ff',1);
   SV.chapter.onImpact && SV.chapter.onImpact(h,power);
 }
@@ -524,7 +544,7 @@ SV.loop=function(){
   }
   requestAnimationFrame(SV.loop);
 };
-SV.setChapter=function(C){ if (SV.chapter && SV.chapter.exit) SV.chapter.exit(); SV.clearWaves(); blips.length=0; SV.chapter=C; SV.attachOrb(C.scene); C.enter(); };
+SV.setChapter=function(C){ humStop(); if (SV.chapter && SV.chapter.exit) SV.chapter.exit(); SV.clearWaves(); blips.length=0; SV.chapter=C; SV.attachOrb(C.scene); C.enter(); };
 SV.fadeTo=function(fn,dur=1.4){ const u=post.uniforms.uFade, t0=performance.now(); const step=()=>{ const k=(performance.now()-t0)/(dur*500); if (k<1){ u.value=k; requestAnimationFrame(step); } else { u.value=1; fn(); const t1=performance.now(); const up=()=>{ const q=(performance.now()-t1)/(dur*500); u.value=Math.max(0,1-q); if (q<1) requestAnimationFrame(up); }; up(); } }; step(); };
 })();
 </script>
@@ -824,6 +844,9 @@ let flowerPing=0;
 function callFlower(){ const p=new T.Vector3(ISLAND.x,4,ISLAND.z); [523.25,659.25,783.99].forEach((f,i)=>SV.AU.tone(p,{ f, kind:'chime', dur:3.5, vol:.3, delay:i*.25 })); SV.wave(p,.6,{ color:0xd8c8ff, maxR:16, speed:8, src:'flower' }); SV.blip(p,'#d8c8ff',1.4); }
 
 /* ---------- interaction ---------- */
+/* where the orb's hum grows strong: the sleeping/answering memory crystals (and the flower once they are found) */
+C1.orbRange=24;
+C1.orbTargets=()=>{ const L=echoes.filter(e=>!e.got).map(e=>e.g.position.clone().setY(1.7)); if (C1.found>=3) L.push(new T.Vector3(ISLAND.x,4,ISLAND.z)); return L; };
 C1.canInteract=a=>{ const k=a.obj.userData.kind; if (k==='orbIdle') return true; if (k==='echo'){ const e=echoes[a.obj.userData.k]; return a.dist<3.6 && e.awake && !e.got; } return false; };
 C1.interact=a=>{ const k=a.obj.userData.kind;
   if (k==='orbIdle' && a.dist<9){ pickOrb(); return; }
@@ -1100,6 +1123,8 @@ function openDoor(){
 
 /* ---------- interaction ---------- */
 const reach={ crystal:6.8, gate:9 };
+C2.orbRange=14;
+C2.orbTargets=()=>{ const L=crystals.map(c=>c.g.position.clone().setY(1.6)); if (!S.open) L.push(heart.getWorldPosition(new T.Vector3())); return L; };
 C2.canInteract=a=>{ const k=a.obj.userData.kind; return (k==='crystal' && a.dist<reach.crystal) || (k==='gate' && a.dist<reach.gate); };
 C2.interact=a=>{ const k=a.obj.userData.kind; if (k==='crystal' && a.dist<reach.crystal) strike(crystals[a.obj.userData.i]); else if (k==='gate' && a.dist<reach.gate) playMelody(); };
 C2.prompt=a=>{
