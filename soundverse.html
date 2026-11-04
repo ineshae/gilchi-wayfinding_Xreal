@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SOUNDVERSE</title>
+<meta name="description" content="SOUNDVERSE — 잃어버린 소리의 세계. 심인성 난청을 겪는 주인공이 소리를 직접 만들고 조작하며 세계를 되살리는 VR 어드벤처 프로토타입 (Chapter 1 침묵의 숲 · Chapter 2 공명의 동굴)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ink:#eef0ff; --muted:#a9adc9; --dim:#6f7392; --panel:rgba(10,10,24,.58); --edge:rgba(190,180,255,.22); --edge-2:rgba(200,190,255,.42);
+  --lav:#c9b6ff; --pink:#ff9fd8; --cyan:#8ff3ff; --mint:#8dffcf; --gold:#ffe28a;
+  --serif:"Gowun Batang","Noto Serif KR",serif; --latin:"Cormorant Garamond",Georgia,serif; --body:"Noto Sans KR",system-ui,sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){color-scheme:dark}}
+:root[data-theme="dark"]{color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;background:#05050c;color:var(--ink);font-family:var(--body);-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--lav);outline-offset:3px}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+/* ---------- HUD ---------- */
+.hud{position:fixed;inset:0;pointer-events:none}
+.obj{position:absolute;left:max(18px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));max-width:min(380px,70vw);padding:12px 16px;border-radius:16px;background:var(--panel);border:1px solid var(--edge);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:opacity .4s}
+.obj .lb{font:700 10px/1 var(--body);letter-spacing:.24em;color:var(--lav);text-transform:uppercase}
+.obj .tx{margin-top:6px;font:500 15px/1.5 var(--body);color:var(--ink)}
+.obj .sub{margin-top:4px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.chap{position:absolute;right:max(18px,env(safe-area-inset-right));top:max(16px,env(safe-area-inset-top));text-align:right}
+.chap .c1{font:italic 500 15px/1 var(--latin);letter-spacing:.12em;color:var(--muted)}
+.chap .c2{font:700 16px/1.4 var(--serif);color:var(--ink);margin-top:4px}
+.pips{display:flex;gap:7px;justify-content:flex-end;margin-top:9px}
+.pips i{width:14px;height:14px;transform:rotate(45deg);border:1.5px solid var(--edge-2);border-radius:2px;transition:all .5s}
+.pips i.on{background:linear-gradient(135deg,var(--cyan),var(--lav));border-color:transparent;box-shadow:0 0 14px var(--lav)}
+.cross{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px}
+.cross svg{width:100%;height:100%;overflow:visible}
+.cross .dot{fill:rgba(255,255,255,.9)}
+.cross .rg{fill:none;stroke:rgba(255,255,255,.28);stroke-width:1.5}
+.cross .ch{fill:none;stroke:var(--cyan);stroke-width:3;stroke-linecap:round;filter:drop-shadow(0 0 6px var(--cyan))}
+.prompt{position:absolute;left:50%;top:calc(50% + 34px);transform:translateX(-50%);padding:6px 12px;border-radius:999px;background:rgba(10,10,24,.62);border:1px solid var(--edge);font:500 13px/1.3 var(--body);white-space:nowrap;opacity:0;transition:opacity .2s}
+.prompt.on{opacity:1}
+.prompt kbd,.keys kbd,.card kbd{font:700 11px/1 var(--body);padding:2px 6px;border-radius:5px;border:1px solid var(--edge-2);background:rgba(255,255,255,.06);color:var(--ink)}
+.mem{position:absolute;left:50%;bottom:clamp(110px,18vh,170px);transform:translateX(-50%);width:min(760px,88vw);text-align:center;font:400 clamp(17px,2.1vw,22px)/1.7 var(--serif);color:#fff;text-shadow:0 2px 18px rgba(0,0,0,.9),0 0 30px rgba(140,120,255,.35);opacity:0;transition:opacity 1.2s}
+.mem.on{opacity:1}
+.mem small{display:block;margin-top:6px;font:italic 500 14px/1 var(--latin);letter-spacing:.14em;color:var(--lav)}
+#compass{position:absolute;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);width:260px;height:86px}
+.keys{position:absolute;left:max(18px,env(safe-area-inset-left));bottom:max(16px,env(safe-area-inset-bottom));font-size:12px;color:var(--muted);line-height:2;padding:8px 12px;border-radius:12px;background:rgba(10,10,24,.42);border:1px solid var(--edge)}
+.side{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+.pnl{padding:10px 12px;border-radius:14px;background:var(--panel);border:1px solid var(--edge);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:opacity .3s}
+.pnl .lb{font:700 10px/1 var(--body);letter-spacing:.2em;color:var(--lav);text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between;gap:12px}
+.pnl .lb b{color:var(--ink);letter-spacing:.04em;font-weight:700}
+#wave{width:300px;height:120px;display:block}
+#pitch{width:300px;height:96px;display:block}
+.flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .9s}
+.vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55))}
+.lockhint{position:absolute;left:50%;top:58%;transform:translateX(-50%);padding:10px 16px;border-radius:999px;background:rgba(10,10,24,.7);border:1px solid var(--edge-2);font-size:13.5px;pointer-events:none}
+
+/* ---------- overlays ---------- */
+.ov{position:fixed;inset:0;display:grid;place-items:center;padding:24px;overflow:auto;-webkit-user-select:text;user-select:text}
+.title{background:radial-gradient(900px 600px at 50% 40%,rgba(120,100,255,.18),transparent 70%),radial-gradient(700px 500px at 70% 80%,rgba(255,120,200,.10),transparent 70%),rgba(4,4,10,.72)}
+.tbox{max-width:760px;text-align:center}
+.logo{font:600 clamp(38px,7.2vw,92px)/1 var(--latin);letter-spacing:.14em;margin:0 -.14em 0 0;white-space:nowrap;max-width:100%;background:linear-gradient(180deg,#fff,#cdbfff 60%,#8ff3ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 30px rgba(170,150,255,.45))}
+.logo-sub{font:700 clamp(17px,2.4vw,22px)/1.4 var(--serif);margin:12px 0 0;color:var(--ink)}
+.genre{font:italic 500 15px/1 var(--latin);letter-spacing:.2em;color:var(--muted);margin-top:10px}
+.story{font:400 15.5px/1.95 var(--serif);color:#d9dcf5;margin:26px auto 0;max-width:600px}
+.story b{color:#fff}
+.btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px}
+.btn{padding:14px 24px;border-radius:999px;border:1px solid var(--edge-2);background:rgba(255,255,255,.05);font:700 15px/1 var(--body);transition:all .2s}
+.btn:hover{background:rgba(255,255,255,.12)}
+.btn.main{background:linear-gradient(135deg,#c9b6ff,#8ff3ff);color:#14112a;border-color:transparent;box-shadow:0 0 30px rgba(170,150,255,.45)}
+.note{margin-top:18px;font-size:12.5px;color:var(--muted)}
+.ctl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:26px;text-align:left}
+@media (max-width:720px){.ctl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ctl div{padding:11px 12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--edge);font-size:12.5px;color:var(--muted);line-height:1.55}
+.ctl b{display:block;color:var(--ink);font:700 13.5px/1.3 var(--body);margin-bottom:4px}
+.ctl kbd{font:700 11px/1 var(--body);padding:2px 5px;border-radius:5px;border:1px solid var(--edge-2);color:var(--ink)}
+.card{position:fixed;inset:0;display:grid;place-items:center;pointer-events:none;opacity:0;transition:opacity 1.4s}
+.card.on{opacity:1}
+.card .in{text-align:center;padding:30px 40px;background:radial-gradient(closest-side,rgba(4,4,12,.75),transparent)}
+.card .e{font:italic 500 18px/1 var(--latin);letter-spacing:.32em;color:var(--lav)}
+.card h2{font:700 clamp(30px,5vw,52px)/1.2 var(--serif);margin:14px 0 8px;color:#fff;text-shadow:0 0 30px rgba(150,130,255,.6)}
+.card p{font:400 16px/1.6 var(--serif);color:#d6d9f2;margin:0}
+.endbox{max-width:640px;text-align:center;padding:34px 30px;border-radius:26px;background:rgba(8,8,20,.78);border:1px solid var(--edge-2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.endbox h2{font:700 30px/1.3 var(--serif);margin:10px 0}
+.endbox p{font:400 15.5px/1.85 var(--serif);color:#d9dcf5}
+.learn{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;text-align:left}
+.learn div{padding:12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--edge);font-size:13px;color:var(--muted);line-height:1.6}
+.learn b{display:block;color:var(--ink);margin-bottom:3px;font:700 14px/1.3 var(--serif)}
+@media (max-width:640px){.keys{display:none}#compass{width:200px}.side{display:none}}
+@media (prefers-reduced-motion: reduce){.card,.mem{transition-duration:.2s}}
+@media (max-width:640px){.chap{display:none}.keys{display:none}.side{display:none}}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="SOUNDVERSE 3D 화면"></canvas>
+<div class="vig"></div>
+
+<div class="hud" id="hud" hidden>
+  <div class="obj" id="obj"><div class="lb">지금 할 일</div><div class="tx" id="objT"></div><div class="sub" id="objS"></div></div>
+  <div class="chap"><div class="c1" id="chapE">Chapter 1</div><div class="c2" id="chapT">침묵의 숲</div><div class="pips" id="pips"></div></div>
+  <div class="cross" aria-hidden="true"><svg viewBox="-23 -23 46 46"><circle class="rg" r="12"/><circle class="dot" r="2.2"/><path class="ch" id="charge" d=""/></svg></div>
+  <div class="prompt" id="prompt"></div>
+  <div class="mem" id="mem"></div>
+  <canvas id="compass" width="520" height="172" aria-label="소리 나침반: 소리가 들린 방향이 빛으로 표시돼요"></canvas>
+  <div class="keys" id="keys"><kbd>W A S D</kbd> 걷기 · <kbd>마우스</kbd> 둘러보기<br><kbd>클릭</kbd> 잡기 · 두드리기 · <kbd>꾹 눌렀다 떼기</kbd> 던지기<br><kbd>우클릭</kbd>/<kbd>Q</kbd> 귀 기울이기 · <kbd>휠</kbd> 음높이 · <kbd>Esc</kbd> 마우스 풀기</div>
+  <div class="side">
+    <div class="pnl" id="wavePnl" hidden><div class="lb">공명 맞추기 <b id="waveHz"></b></div><canvas id="wave" width="600" height="240"></canvas></div>
+    <div class="pnl" id="pitchPnl" hidden><div class="lb">음높이 <b id="pitchN"></b></div><canvas id="pitch" width="600" height="192"></canvas></div>
+  </div>
+  <div class="lockhint" id="lockhint" hidden>화면을 클릭하면 다시 둘러볼 수 있어요</div>
+</div>
+
+<div class="card" id="card"><div class="in"><div class="e" id="cardE">CHAPTER 1</div><h2 id="cardT"></h2><p id="cardS"></p></div></div>
+<div class="flash" id="flash"></div>
+
+<div class="ov title" id="title">
+  <div class="tbox">
+    <h1 class="logo">SOUNDVERSE</h1>
+    <p class="logo-sub">잃어버린 소리의 세계</p>
+    <div class="genre">VR Adventure · Puzzle · Music Interaction</div>
+    <p class="story">그날 이후로, 세상의 소리가 멀어졌어요.<br>
+      어느 밤 꿈속에서 나는 <b>소리가 사라진 세계</b>에 들어왔어요. 이곳에서는 소리가 사라진 자리마다 색과 움직임도 멈춰 있어요.<br>
+      이상하게도 이 세계에서 소리는 <b>빛의 물결</b>로 보여요. 손에 쥔 <b>소리 구슬</b>로 직접 소리를 만들고, 흩어진 기억을 찾아 세계를 되살려요.</p>
+    <div class="ctl">
+      <div><b>걷고 둘러보기</b><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 걷기, 마우스로 둘러보기, <kbd>Shift</kbd> 빨리</div>
+      <div><b>잡기 · 두드리기</b>가운데 점을 맞추고 <kbd>클릭</kbd> (또는 <kbd>E</kbd>)</div>
+      <div><b>던지기 · 누르기</b>구슬을 쥔 채 <kbd>꾹</kbd> 눌렀다 떼면 던져요. 오래 누를수록 크고 멀리 퍼져요</div>
+      <div><b>귀 기울이기 · 음높이</b><kbd>우클릭</kbd>/<kbd>Q</kbd>로 소리의 방향 보기, <kbd>휠</kbd>로 크리스털 음높이 바꾸기</div>
+    </div>
+    <div class="btns">
+      <button class="btn main" id="startBtn" type="button">Chapter 1 · 침묵의 숲부터</button>
+      <button class="btn" id="ch2Btn" type="button">Chapter 2 · 공명의 동굴 바로 하기</button>
+    </div>
+    <p class="note">이어폰을 끼면 소리의 방향이 더 또렷해요 · 컴퓨터(마우스·키보드)용 프로토타입</p>
+  </div>
+</div>
+
+<div class="ov" id="end" hidden style="background:rgba(4,4,10,.55)">
+  <div class="endbox">
+    <div class="genre">Prototype · Chapter 1 – 2</div>
+    <h2 id="endT">공명의 동굴이 열렸어요</h2>
+    <p id="endP"></p>
+    <div class="learn">
+      <div><b>침묵의 숲 · 소리의 방향</b>소리는 퍼져 나가며 멀어질수록 작아지고, 양쪽 귀에 닿는 차이로 방향을 알 수 있어요.</div>
+      <div><b>공명의 동굴 · 소리의 높낮이</b>작은 크리스털일수록 높은 소리. 두 소리의 주파수가 같아지면 맥놀이가 사라지고 공명해요.</div>
+    </div>
+    <div class="btns"><button class="btn main" id="againBtn" type="button">처음부터 다시</button><button class="btn" id="ch2AgainBtn" type="button">Chapter 2 다시</button></div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{
+'use strict';
+const T=THREE, el=id=>document.getElementById(id), clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), lerp=(a,b,k)=>a+(b-a)*k;
+const SV=window.SV={ T, el, clamp, lerp, t:0, chapter:null, shake:0 };
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches; SV.reduceMotion=reduceMotion;
+
+/* ================= renderer + post (desaturated world that regains colour) ================= */
+const canvas=el('gl');
+const renderer=new T.WebGLRenderer({ canvas, antialias:false, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.6));
+const camera=new T.PerspectiveCamera(70,1,.05,500); camera.rotation.order='YXZ';
+SV.renderer=renderer; SV.camera=camera;
+const isGL2=renderer.capabilities.isWebGL2;
+let rt=null;
+function makeRT(w,h){ if (rt) rt.dispose(); const o={ minFilter:T.LinearFilter, magFilter:T.LinearFilter, format:T.RGBAFormat };
+  rt=isGL2&&T.WebGLMultisampleRenderTarget ? new T.WebGLMultisampleRenderTarget(w,h,o) : new T.WebGLRenderTarget(w,h,o); if (rt.samples!==undefined) rt.samples=4; }
+const post=new T.ShaderMaterial({
+  uniforms:{ tD:{value:null}, uSat:{value:0}, uTint:{value:new T.Vector3(1,1,1)}, uTime:{value:0}, uFlash:{value:0}, uRes:{value:new T.Vector2(1,1)}, uGlow:{value:.55}, uFade:{value:0} },
+  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.,1.); }`,
+  fragmentShader:`uniform sampler2D tD; uniform float uSat,uTime,uFlash,uGlow,uFade; uniform vec3 uTint; uniform vec2 uRes; varying vec2 vUv;
+    float h(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
+    void main(){
+      vec3 c=texture2D(tD,vUv).rgb;
+      // soft glow from bright parts (cheap bloom)
+      vec3 g=vec3(0.); float tot=0.;
+      for (int i=0;i<12;i++){ float a=float(i)*0.5236; for (int j=1;j<=2;j++){ vec2 o=vec2(cos(a),sin(a))*float(j)*0.0085*vec2(uRes.y/uRes.x,1.); vec3 s=texture2D(tD,vUv+o).rgb; g+=max(s-0.55,0.); tot+=1.; } }
+      c+=g/tot*uGlow*2.2;
+      float l=dot(c,vec3(.299,.587,.114));
+      vec3 grey=vec3(l)*vec3(.93,.95,1.04);
+      c=mix(grey,c,uSat)*uTint;
+      c+= (h(vUv*uRes+uTime)-.5)*0.035;
+      vec2 q=vUv-.5; c*=1.-dot(q,q)*.55;
+      c=mix(c,vec3(1.),uFlash); c=mix(c,vec3(0.),uFade);
+      gl_FragColor=vec4(c,1.);
+    }`, depthTest:false, depthWrite:false });
+const postScene=new T.Scene(), postCam=new T.OrthographicCamera(-1,1,1,-1,0,1);
+postScene.add(new T.Mesh(new T.PlaneGeometry(2,2),post));
+SV.post=post;
+function resize(){ const w=innerWidth, h=innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();
+  const pr=renderer.getPixelRatio(); makeRT(Math.round(w*pr),Math.round(h*pr)); post.uniforms.uRes.value.set(w*pr,h*pr); }
+addEventListener('resize',resize); resize();
+
+/* ================= shared textures / materials ================= */
+function canvasTex(w,h,paint){ const c=document.createElement('canvas'); c.width=w; c.height=h; paint(c.getContext('2d'),w,h); const t=new T.CanvasTexture(c); t.anisotropy=4; return t; }
+const glowTex=canvasTex(128,128,(c,w,h)=>{ const g=c.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(.22,'rgba(255,255,255,.6)'); g.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=g; c.fillRect(0,0,w,h); });
+const ringTex=canvasTex(256,256,(c,w,h)=>{ const g=c.createRadialGradient(w/2,h/2,w*.36,w/2,h/2,w/2); g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(.62,'rgba(255,255,255,.95)'); g.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=g; c.fillRect(0,0,w,h); });
+const glow=(col,op=1,depth=true)=>new T.SpriteMaterial({ map:glowTex, color:col, blending:T.AdditiveBlending, transparent:true, depthWrite:false, depthTest:depth, opacity:op });
+SV.canvasTex=canvasTex; SV.glowTex=glowTex; SV.ringTex=ringTex; SV.glow=glow;
+/* fresnel-ish glassy material for crystals */
+SV.crystalMat=(col,op=.55,emi=.5)=>new T.MeshStandardMaterial({ color:col, emissive:col, emissiveIntensity:emi, transparent:true, opacity:op, roughness:.15, metalness:.1, flatShading:true, depthWrite:false, side:T.DoubleSide });
+SV.edges=(geo,col,op=.9)=>new T.LineSegments(new T.EdgesGeometry(geo,20),new T.LineBasicMaterial({ color:col, transparent:true, opacity:op, blending:T.AdditiveBlending, depthWrite:false }));
+
+/* ================= audio ================= */
+const AU=SV.AU={ ctx:null, levels:{ wind:0, drip:0, birds:0, pad:0 } };
+AU.init=function(){
+  if (AU.ctx) return; const C=window.AudioContext||window.webkitAudioContext; const ctx=AU.ctx=new C();
+  const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=3; comp.connect(ctx.destination);
+  AU.master=ctx.createGain(); AU.master.gain.value=.9; AU.master.connect(comp);
+  AU.inner=ctx.createGain(); AU.inner.gain.value=1; AU.inner.connect(AU.master);        // the orb: always clear (it sounds inside you)
+  AU.muffle=ctx.createBiquadFilter(); AU.muffle.type='lowpass'; AU.muffle.frequency.value=380; AU.muffle.Q.value=.6;
+  AU.world=ctx.createGain(); AU.world.gain.value=1; AU.world.connect(AU.muffle); AU.muffle.connect(AU.master); // the world: muffled until you hear again
+  AU.verb=makeVerb(ctx); AU.verbIn=ctx.createGain(); AU.verbIn.gain.value=.35; AU.verbIn.connect(AU.verb); AU.verb.connect(AU.master);
+  // ambient layers (world bus)
+  const nb=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate), d=nb.getChannelData(0); for (let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const wind=ctx.createBufferSource(); wind.buffer=nb; wind.loop=true; const wf=ctx.createBiquadFilter(); wf.type='bandpass'; wf.frequency.value=420; wf.Q.value=.6;
+  AU.windG=ctx.createGain(); AU.windG.gain.value=0; wind.connect(wf); wf.connect(AU.windG); AU.windG.connect(AU.world); wind.start(); AU.windF=wf;
+  AU.padG=ctx.createGain(); AU.padG.gain.value=0; AU.padG.connect(AU.world); AU.padG.connect(AU.verbIn);
+  AU.pad=[261.6,329.6,392,493.9].map((f,i)=>{ const o=ctx.createOscillator(); o.type=i%2?'triangle':'sine'; o.frequency.value=f; o.detune.value=(i-1.5)*6; const g=ctx.createGain(); g.gain.value=.05; o.connect(g); g.connect(AU.padG); o.start(); return o; });
+  AU.nb=nb;
+};
+function makeVerb(ctx){ const len=ctx.sampleRate*2.6, b=ctx.createBuffer(2,len,ctx.sampleRate); for (let c=0;c<2;c++){ const d=b.getChannelData(c); for (let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6); } const v=ctx.createConvolver(); v.buffer=b; return v; }
+function pannerAt(pos){ const c=AU.ctx, p=c.createPanner(); p.panningModel='HRTF'; p.distanceModel='inverse'; p.refDistance=2.2; p.rolloffFactor=1.1; p.maxDistance=200;
+  if (p.positionX){ p.positionX.value=pos.x; p.positionY.value=pos.y; p.positionZ.value=pos.z; } else p.setPosition(pos.x,pos.y,pos.z); return p; }
+/* one sound event: bell / glass / soft / thud / chime, placed in 3D */
+AU.tone=function(pos,o={}){
+  if (!AU.ctx) return; const c=AU.ctx, t=c.currentTime+(o.delay||0), f=o.f||660, dur=o.dur||2.2, vol=o.vol==null?.5:o.vol;
+  const out=c.createGain(); out.gain.value=vol;
+  let dest=o.bus==='world'?AU.world:AU.inner;
+  if (pos){ const p=pannerAt(pos); out.connect(p); p.connect(dest); } else out.connect(dest);
+  if (o.verb!==false){ const s=c.createGain(); s.gain.value=o.verbAmt||.5; out.connect(s); s.connect(AU.verbIn); }
+  const kind=o.kind||'bell';
+  if (kind==='thud'){ const n=c.createBufferSource(); n.buffer=AU.nb; const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=220; const g=c.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(1,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+.35);
+    n.connect(lp); lp.connect(g); g.connect(out); n.start(t); n.stop(t+.4); return; }
+  const parts=kind==='glass'?[[1,1],[2.32,.42],[4.25,.22],[6.63,.1]]:kind==='soft'?[[1,1],[2,.25],[3,.08]]:kind==='chime'?[[1,1],[3.01,.3],[5.2,.12]]:[[1,1],[2.0,.5],[2.76,.32],[5.4,.14]];
+  parts.forEach(([m,a],i)=>{ const os=c.createOscillator(); os.type=kind==='soft'&&i===0?'triangle':'sine'; os.frequency.value=f*m; if (o.glide) os.frequency.setValueAtTime(f*m*o.glide,t), os.frequency.exponentialRampToValueAtTime(f*m,t+.25);
+    const g=c.createGain(), d=dur/(1+i*(kind==='glass'?1.6:.9)), att=kind==='soft'?.06:.004;
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(a,t+att); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    os.connect(g); g.connect(out); os.start(t); os.stop(t+d+.05); });
+};
+/* a sustained tone you can retune (used to hear beating when two pitches are close) */
+AU.drone=function(pos,f,vol=.12,bus='inner'){
+  if (!AU.ctx) return { set(){}, stop(){}, vol(){} }; const c=AU.ctx, o=c.createOscillator(), o2=c.createOscillator(), g=c.createGain();
+  o.type='sine'; o2.type='sine'; o.frequency.value=f; o2.frequency.value=f*2; const g2=c.createGain(); g2.gain.value=.18; o2.connect(g2); g2.connect(g);
+  g.gain.value=.0001; o.connect(g); const p=pos?pannerAt(pos):null; if (p){ g.connect(p); p.connect(bus==='world'?AU.world:AU.inner); } else g.connect(bus==='world'?AU.world:AU.inner);
+  o.start(); o2.start(); g.gain.setTargetAtTime(vol,c.currentTime,.15);
+  return { set(nf){ o.frequency.setTargetAtTime(nf,c.currentTime,.03); o2.frequency.setTargetAtTime(nf*2,c.currentTime,.03); }, vol(v){ g.gain.setTargetAtTime(Math.max(.0001,v),c.currentTime,.1); },
+    stop(){ g.gain.setTargetAtTime(.0001,c.currentTime,.12); setTimeout(()=>{ try{ o.stop(); o2.stop(); }catch(_){} },600); } };
+};
+/* how much of the world you can hear (0 = almost nothing, 1 = fully) */
+AU.hearing=function(k,ramp=2.5){ if (!AU.ctx) return; const f=lerp(380,18000,Math.pow(k,1.6)); AU.muffle.frequency.setTargetAtTime(f,AU.ctx.currentTime,ramp/3); };
+AU.ambient=function(lv,ramp=3){ if (!AU.ctx) return; const c=AU.ctx; Object.assign(AU.levels,lv);
+  AU.windG.gain.setTargetAtTime(AU.levels.wind*.08,c.currentTime,ramp/3); AU.padG.gain.setTargetAtTime(AU.levels.pad*.55,c.currentTime,ramp/3); };
+AU.chord=function(name){ if (!AU.ctx) return; const C={ forest:[261.6,329.6,392,493.9], cave:[220,277.2,329.6,415.3], open:[293.7,370,440,554.4] }[name]; AU.pad.forEach((o,i)=>o.frequency.setTargetAtTime(C[i],AU.ctx.currentTime,1.2)); };
+let chirpT=0, dripT=0;
+function ambientTick(dt){
+  if (!AU.ctx) return; const L=AU.levels;
+  chirpT-=dt; if (L.birds>0 && chirpT<=0){ chirpT=1.2+Math.random()*3.5/L.birds; const a=Math.random()*6.28, p=new T.Vector3(camera.position.x+Math.cos(a)*14,4+Math.random()*5,camera.position.z+Math.sin(a)*14);
+    const f=1800+Math.random()*1600; for (let i=0;i<2+Math.floor(Math.random()*3);i++) AU.tone(p,{ f, kind:'soft', dur:.18, vol:.08*L.birds, bus:'world', delay:i*.09, glide:.7, verb:false }); }
+  dripT-=dt; if (L.drip>0 && dripT<=0){ dripT=.6+Math.random()*2.2/L.drip; const a=Math.random()*6.28, p=new T.Vector3(camera.position.x+Math.cos(a)*9,.5,camera.position.z+Math.sin(a)*9);
+    AU.tone(p,{ f:1200+Math.random()*900, kind:'soft', dur:.25, vol:.12*L.drip, bus:'world', glide:1.6 }); }
+  if (AU.windF) AU.windF.frequency.value=380+Math.sin(SV.t*.3)*160;
+}
+function listenerTick(){
+  if (!AU.ctx) return; const l=AU.ctx.listener, p=camera.position, f=new T.Vector3(0,0,-1).applyQuaternion(camera.quaternion), u=new T.Vector3(0,1,0).applyQuaternion(camera.quaternion);
+  if (l.positionX){ l.positionX.value=p.x; l.positionY.value=p.y; l.positionZ.value=p.z; l.forwardX.value=f.x; l.forwardY.value=f.y; l.forwardZ.value=f.z; l.upX.value=u.x; l.upY.value=u.y; l.upZ.value=u.z; }
+  else { l.setPosition(p.x,p.y,p.z); l.setOrientation(f.x,f.y,f.z,u.x,u.y,u.z); }
+}
+
+/* ================= player ================= */
+const P=SV.P={ pos:new T.Vector3(0,1.62,0), yaw:0, pitch:0, keys:{}, listen:false, locked:false, drag:null, bob:0, frozen:false };
+const KEYMAP={ KeyW:'f', ArrowUp:'f', KeyS:'b', ArrowDown:'b', KeyA:'l', ArrowLeft:'l', KeyD:'r', ArrowRight:'r', ShiftLeft:'run', ShiftRight:'run' };
+addEventListener('keydown',e=>{ if (!SV.playing) return; const k=KEYMAP[e.code]; if (k){ P.keys[k]=true; e.preventDefault(); }
+  if (e.code==='KeyQ') P.listen=true; if (e.code==='KeyE' && !e.repeat){ SV.press(); SV.release(true); } });
+addEventListener('keyup',e=>{ const k=KEYMAP[e.code]; if (k) P.keys[k]=false; if (e.code==='KeyQ') P.listen=false; });
+addEventListener('blur',()=>{ P.keys={}; P.listen=false; });
+canvas.addEventListener('click',()=>{ if (!SV.playing || P.locked) return; try{ const r=canvas.requestPointerLock(); if (r&&r.catch) r.catch(()=>{ P.noLock=true; }); }catch(_){ P.noLock=true; } });
+document.addEventListener('pointerlockchange',()=>{ P.locked=document.pointerLockElement===canvas; el('lockhint').hidden=P.locked||!SV.playing||P.noLock; });
+document.addEventListener('pointerlockerror',()=>{ P.noLock=true; });
+addEventListener('mousemove',e=>{ if (!SV.playing) return; let dx=0, dy=0;
+  if (P.locked){ dx=e.movementX; dy=e.movementY; } else if (P.noLock && P.drag){ dx=e.clientX-P.drag.x; dy=e.clientY-P.drag.y; P.drag={ x:e.clientX, y:e.clientY }; }
+  P.yaw-=dx*.0022; P.pitch=clamp(P.pitch-dy*.0022,-1.25,1.25); SV.mouseMove=(SV.mouseMove||0)+Math.abs(dx)+Math.abs(dy); });
+canvas.addEventListener('mousedown',e=>{ if (!SV.playing) return; if (e.button===0){ if (P.noLock) P.drag={ x:e.clientX, y:e.clientY }; if (P.locked||P.noLock) SV.press(); } if (e.button===2) P.listen=true; });
+addEventListener('mouseup',e=>{ if (e.button===0){ P.drag=null; if (SV.playing && (P.locked||P.noLock)) SV.release(false); } if (e.button===2) P.listen=false; });
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('wheel',e=>{ if (!SV.playing) return; SV.chapter && SV.chapter.onWheel && SV.chapter.onWheel(SV.aim, Math.sign(e.deltaY)); },{ passive:true });
+function movePlayer(dt){
+  const C=SV.chapter; if (!C || P.frozen) return;
+  const f=(P.keys.f?1:0)-(P.keys.b?1:0), s=(P.keys.r?1:0)-(P.keys.l?1:0), sp=P.keys.run?5.2:3.1;
+  if (f||s){ const fx=-Math.sin(P.yaw), fz=-Math.cos(P.yaw), rx=Math.cos(P.yaw), rz=-Math.sin(P.yaw); let vx=fx*f+rx*s, vz=fz*f+rz*s; const L=Math.hypot(vx,vz)||1; vx=vx/L*sp*dt; vz=vz/L*sp*dt;
+    const nx=P.pos.x+vx, nz=P.pos.z+vz;
+    if (C.walkable(nx,nz)){ P.pos.x=nx; P.pos.z=nz; } else if (C.walkable(nx,P.pos.z)) P.pos.x=nx; else if (C.walkable(P.pos.x,nz)) P.pos.z=nz;
+    P.bob+=dt*(P.keys.run?11:8); }
+  const gy=C.groundY?C.groundY(P.pos.x,P.pos.z):0; P.pos.y=lerp(P.pos.y,gy+1.62,Math.min(1,dt*10));
+}
+
+/* ================= aiming ================= */
+const ray=new T.Raycaster(), V=new T.Vector3(), V2=new T.Vector3();
+function aimTick(){
+  const C=SV.chapter; SV.aim=null; if (!C || !C.interactables) return;
+  ray.setFromCamera({ x:0, y:0 },camera); ray.far=40;
+  const objs=C.interactables.filter(o=>o.visible!==false && !(o.userData&&o.userData.off));
+  const hits=ray.intersectObjects(objs,true);
+  if (hits.length){ let o=hits[0].object; while (o && !o.userData.kind) o=o.parent; if (o) SV.aim={ obj:o, dist:hits[0].distance, point:hits[0].point }; }
+}
+
+/* ================= the sound orb: grab · press (charge) · throw ================= */
+const orb=SV.orb={ state:'none', pos:new T.Vector3(), vel:new T.Vector3(), charge:0, pressT:0, pressing:false, trail:[], color:new T.Color(0xbfe9ff) };
+function makeOrb(){
+  const g=new T.Group();
+  const core=new T.Mesh(new T.SphereGeometry(.09,24,16),new T.MeshBasicMaterial({ color:0xffffff }));
+  const shell=new T.Mesh(new T.SphereGeometry(.16,32,20),new T.ShaderMaterial({ transparent:true, depthWrite:false, blending:T.AdditiveBlending,
+    uniforms:{ uC:{value:new T.Color(0xa7d8ff)}, uT:{value:0} },
+    vertexShader:`varying vec3 vN; varying vec3 vV; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.); vN=normalize(normalMatrix*normal); vV=normalize(-mv.xyz); gl_Position=projectionMatrix*mv; }`,
+    fragmentShader:`uniform vec3 uC; uniform float uT; varying vec3 vN; varying vec3 vV; void main(){ float f=pow(1.-abs(dot(vN,vV)),2.2); gl_FragColor=vec4(uC*(.35+1.4*f),.25+.75*f); }` }));
+  const halo=new T.Sprite(glow(0x9fd8ff,.8)); halo.scale.setScalar(.9);
+  const ring=new T.Mesh(new T.TorusGeometry(.26,.012,8,64),new T.MeshBasicMaterial({ color:0xff9fe0, transparent:true, opacity:.9, blending:T.AdditiveBlending, depthWrite:false }));
+  ring.rotation.x=1.15; ring.rotation.y=.4;
+  const chargeRing=new T.Mesh(new T.RingGeometry(.3,.33,48),new T.MeshBasicMaterial({ color:0x8ff3ff, transparent:true, opacity:0, blending:T.AdditiveBlending, side:T.DoubleSide, depthWrite:false }));
+  g.add(core,shell,halo,ring,chargeRing); g.userData={ kind:'orb', core, shell, halo, ring, chargeRing };
+  orb.mesh=g; return g;
+}
+makeOrb();
+for (let i=0;i<22;i++){ const s=new T.Sprite(glow(0xbfe9ff,.7)); s.scale.setScalar(.12); s.visible=false; orb.trail.push({ s, life:0 }); }
+SV.attachOrb=function(scene){ scene.add(orb.mesh); orb.trail.forEach(t=>scene.add(t.s)); };
+SV.giveOrb=function(){ orb.state='held'; orb.mesh.visible=true; };
+SV.press=function(){
+  const C=SV.chapter; if (!C) return;
+  const a=SV.aim;
+  if (orb.state==='held' && !(a && C.canInteract && C.canInteract(a))){ orb.pressing=true; orb.pressT=SV.t; orb.charge=0; return; }
+  if (a && C.interact) C.interact(a);
+};
+SV.release=function(fromKey){
+  if (!orb.pressing){ return; } orb.pressing=false;
+  const held=SV.t-orb.pressT, power=clamp(orb.charge,0,1);
+  throwOrb(Math.max(.12,power), held<.18 && !fromKey);
+};
+function throwOrb(power){
+  if (orb.state!=='held') return;
+  camera.getWorldDirection(V); orb.vel.copy(V).multiplyScalar(7+15*power); orb.vel.y+=2+2.5*power; orb.power=power; orb.state='fly'; orb.flyT=0;
+  AU.tone(orb.pos,{ f:880+power*220, kind:'soft', dur:.25, vol:.08, glide:.6, verb:false });
+  SV.chapter && SV.chapter.onThrow && SV.chapter.onThrow(power);
+}
+const HAND=new T.Vector3(.34,-.29,-.95);
+function orbTick(dt){
+  const m=orb.mesh, u=m.userData; if (orb.state==='none'){ m.visible=false; return; }
+  u.shell.material.uniforms.uT.value=SV.t; u.ring.rotation.z+=dt*.9; u.halo.material.opacity=.6+.25*Math.sin(SV.t*3);
+  if (orb.pressing){ orb.charge=clamp((SV.t-orb.pressT)/1.3,0,1); }
+  if (orb.state==='held'){
+    V.copy(HAND); if (orb.pressing){ V.z+=.08*orb.charge; V.x-=.03*orb.charge; } V.applyQuaternion(camera.quaternion).add(camera.position);
+    orb.pos.lerp(V,Math.min(1,dt*18)); m.position.copy(orb.pos);
+    const k=orb.pressing?orb.charge:0; u.chargeRing.material.opacity=k*.9; u.chargeRing.scale.setScalar(1+k*1.4); u.chargeRing.lookAt(camera.position); m.scale.setScalar((1+k*.35)*.48);
+    // shaking the held orb (wiggling the mouse while pressing) makes it hum
+  } else if (orb.state==='fly'){
+    orb.flyT+=dt; const prev=orb.pos.clone(); orb.vel.y-=9.8*.75*dt; orb.pos.addScaledVector(orb.vel,dt); m.position.copy(orb.pos); m.scale.setScalar(1);
+    spawnTrail(orb.pos);
+    const hit=SV.chapter.collide(orb.pos,prev);
+    if (hit || orb.flyT>4){ const h=hit||{ point:orb.pos.clone(), kind:'air' }; impact(h); }
+  } else if (orb.state==='gone'){ if (SV.t>orb.backT){ orb.state='return'; } }
+  else if (orb.state==='return'){
+    V.copy(HAND).applyQuaternion(camera.quaternion).add(camera.position); orb.pos.lerp(V,Math.min(1,dt*6)); m.position.copy(orb.pos); m.visible=true; m.scale.setScalar(Math.max(.48,Math.min(1,orb.pos.distanceTo(V))));  spawnTrail(orb.pos);
+    if (orb.pos.distanceTo(V)<.15){ orb.state='held'; }
+  } else if (orb.state==='idle'){ // floating in the world waiting to be picked up
+    m.position.copy(orb.home).add(V2.set(0,Math.sin(SV.t*1.6)*.15,0)); orb.pos.copy(m.position); m.scale.setScalar(1.4);
+  }
+  // trail
+  orb.trail.forEach(t=>{ if (t.life<=0) return; t.life-=dt*2.2; t.s.material.opacity=Math.max(0,t.life)*.7; t.s.scale.setScalar(.04+.14*t.life); if (t.life<=0) t.s.visible=false; });
+  // crosshair charge arc
+  const k=orb.pressing?orb.charge:0, a=k*Math.PI*2; el('charge').setAttribute('d',k>0.01?`M0,-16 A16,16 0 ${a>Math.PI?1:0},1 ${Math.sin(a)*16},${-Math.cos(a)*16}`:'');
+}
+let trailI=0, trailT=0;
+function spawnTrail(p){ trailT-=1/60; if (trailT>0) return; trailT=.02; const t=orb.trail[trailI++%orb.trail.length]; t.s.position.copy(p); t.life=1; t.s.visible=true; }
+function impact(h){
+  orb.state='gone'; orb.mesh.visible=false; orb.backT=SV.t+.55;
+  const p=h.point.clone(); if (h.kind!=='water') p.y=Math.max(p.y,.05);
+  const power=orb.power||.3;
+  SV.wave(p,power,{ water:h.kind==='water', color:SV.chapter.waveColor||0x9fe7ff });
+  if (!h.silent) AU.tone(p,{ f:SV.chapter.orbNote||523.3, kind:'bell', dur:1.6+power*2.2, vol:.35+power*.4 });
+  SV.blip(p,'#9fe7ff',1);
+  SV.chapter.onImpact && SV.chapter.onImpact(h,power);
+}
+
+/* ================= sound waves you can see ================= */
+const waves=SV.waves=[];
+const ringGeo=new T.RingGeometry(.94,1,96); ringGeo.rotateX(-Math.PI/2);
+const shellGeo=new T.IcosahedronGeometry(1,3);
+SV.wave=function(p,power,o={}){
+  const C=SV.chapter; if (!C) return; const col=new T.Color(o.color||0x9fe7ff);
+  const rings=[0,1,2].map(i=>{ const m=new T.Mesh(ringGeo,new T.MeshBasicMaterial({ color:col, transparent:true, opacity:.9, blending:T.AdditiveBlending, depthWrite:false, side:T.DoubleSide })); m.position.copy(p); m.position.y=(o.water?0:.04)+(C.waveY||0)+.01*i; C.scene.add(m); return m; });
+  const shell=new T.Mesh(shellGeo,new T.MeshBasicMaterial({ color:col, wireframe:true, transparent:true, opacity:.35, blending:T.AdditiveBlending, depthWrite:false })); shell.position.copy(p); C.scene.add(shell);
+  const w={ p:p.clone(), r:0, maxR:o.maxR||(6+18*power), speed:o.speed||11, power, rings, shell, t:0, water:o.water, src:o.src||'orb', hit:new Set() };
+  waves.push(w); if (o.water && C.ripple) C.ripple(p,power); return w;
+};
+function wavesTick(dt){
+  const C=SV.chapter;
+  for (let i=waves.length-1;i>=0;i--){ const w=waves[i]; w.t+=dt; w.r=Math.min(w.maxR,w.t*w.speed); const k=w.r/w.maxR, fade=w.r>=w.maxR?Math.max(0,1-(w.t-w.maxR/w.speed)/.6):1;
+    w.rings.forEach((m,j)=>{ const rr=Math.max(.01,w.r-j*.9); m.scale.setScalar(rr); m.material.opacity=(1-k*.7)*fade*(1-j*.3); });
+    w.shell.scale.setScalar(Math.max(.01,w.r*.85)); w.shell.material.opacity=.3*(1-k)*fade; w.shell.rotation.y+=dt*.3;
+    C && C.onWave && C.onWave(w);
+    if (fade<=0){ w.rings.forEach(m=>{ C.scene.remove(m); m.material.dispose(); }); C.scene.remove(w.shell); w.shell.material.dispose(); waves.splice(i,1); } }
+}
+SV.clearWaves=function(){ const C=SV.chapter; waves.forEach(w=>{ w.rings.forEach(m=>C.scene.remove(m)); C.scene.remove(w.shell); }); waves.length=0; };
+
+/* ================= the sound compass: where sounds came from ================= */
+const blips=[];
+SV.blip=function(p,col,strength=1,persist){ blips.push({ p:p.clone(), col, s:strength, t:0, persist }); if (blips.length>24) blips.shift(); };
+const cmp=el('compass'), cg=cmp.getContext('2d');
+function compassTick(dt){
+  const w=cmp.width, h=cmp.height, cx=w/2, cy=h*.56, rx=w*.42, ry=h*.34; cg.clearRect(0,0,w,h);
+  cg.save(); cg.lineWidth=2; cg.strokeStyle='rgba(200,190,255,.28)'; cg.beginPath(); cg.ellipse(cx,cy,rx,ry,0,0,Math.PI*2); cg.stroke();
+  cg.strokeStyle='rgba(200,190,255,.12)'; cg.beginPath(); cg.ellipse(cx,cy,rx*.55,ry*.55,0,0,Math.PI*2); cg.stroke();
+  cg.fillStyle='rgba(255,255,255,.9)'; cg.beginPath(); cg.moveTo(cx,cy-9); cg.lineTo(cx+6,cy+6); cg.lineTo(cx-6,cy+6); cg.closePath(); cg.fill();
+  cg.font='700 18px "Noto Sans KR",sans-serif'; cg.fillStyle='rgba(200,190,255,.6)'; cg.textAlign='center'; cg.fillText(P.listen?'귀 기울이는 중 · 소리의 방향':'소리 나침반',cx,h-6);
+  const list=blips.slice(); const C=SV.chapter; if (P.listen && C && C.listenSources) C.listenSources().forEach(s=>list.push({ p:s.pos, col:s.col, s:1, t:0, live:true }));
+  for (let i=blips.length-1;i>=0;i--){ blips[i].t+=dt; if (blips[i].t>3.2 && !blips[i].persist) blips.splice(i,1); }
+  list.forEach(b=>{ const dx=b.p.x-P.pos.x, dz=b.p.z-P.pos.z, d=Math.hypot(dx,dz); if (d<.5) return;
+    const ang=Math.atan2(dx,-dz)+P.yaw; // 0 = straight ahead
+    const near=clamp(1-d/45,.25,1), x=cx+Math.sin(ang)*rx*(.55+.45*near), y=cy-Math.cos(ang)*ry*(.55+.45*near);
+    const life=b.live?1:Math.max(0,1-b.t/3.2), pulse=b.live?(.6+.4*Math.sin(SV.t*6)):1;
+    const g=cg.createRadialGradient(x,y,0,x,y,22*b.s); g.addColorStop(0,b.col); g.addColorStop(1,'rgba(0,0,0,0)'); cg.globalAlpha=life*pulse; cg.fillStyle=g; cg.beginPath(); cg.arc(x,y,22*b.s,0,Math.PI*2); cg.fill();
+    cg.fillStyle='#fff'; cg.beginPath(); cg.arc(x,y,3.2,0,Math.PI*2); cg.fill(); cg.globalAlpha=1; });
+  cg.restore();
+}
+
+/* ================= HUD text ================= */
+SV.objective=(t,s)=>{ el('objT').textContent=t; el('objS').textContent=s||''; el('obj').animate([{opacity:.3},{opacity:1}],{duration:500}); };
+let memT=null;
+SV.memory=(t,s,dur=6)=>{ const m=el('mem'); m.innerHTML=t+(s?'<small>'+s+'</small>':''); m.classList.add('on'); clearTimeout(memT); memT=setTimeout(()=>m.classList.remove('on'),dur*1000); };
+let cardT=null;
+SV.card=(e,t,s,dur=4)=>{ el('cardE').textContent=e; el('cardT').textContent=t; el('cardS').innerHTML=s||''; const c=el('card'); c.classList.add('on'); clearTimeout(cardT); cardT=setTimeout(()=>c.classList.remove('on'),dur*1000); };
+SV.prompt=(t)=>{ const p=el('prompt'); if (t){ p.innerHTML=t; p.classList.add('on'); } else p.classList.remove('on'); };
+SV.pips=(n,total)=>{ const b=el('pips'); if (b.children.length!==total){ b.innerHTML=''; for (let i=0;i<total;i++) b.appendChild(document.createElement('i')); } [...b.children].forEach((x,i)=>x.classList.toggle('on',i<n)); };
+SV.flash=(k=.8)=>{ post.uniforms.uFlash.value=k; };
+SV.chapterLabel=(e,t)=>{ el('chapE').textContent=e; el('chapT').textContent=t; };
+
+/* ================= loop ================= */
+let last=performance.now();
+SV.loop=function(){
+  const now=performance.now(), dt=Math.min(SV.maxDt||.05,(now-last)/1000); last=now; SV.t+=dt; SV.dt=dt;
+  const C=SV.chapter;
+  if (C){
+    if (SV.playing) movePlayer(dt);
+    camera.position.copy(P.pos); const bob=(P.keys.f||P.keys.b||P.keys.l||P.keys.r)&&!reduceMotion?Math.sin(P.bob)*.035:0; camera.position.y+=bob;
+    if (SV.shake>0){ camera.position.x+=(Math.random()-.5)*SV.shake*.12; camera.position.y+=(Math.random()-.5)*SV.shake*.12; SV.shake=Math.max(0,SV.shake-dt*1.4); }
+    camera.rotation.set(P.pitch,P.yaw,0);
+    aimTick(); orbTick(dt); wavesTick(dt); C.update(dt,SV.t);
+    if (SV.playing && C.prompt) SV.prompt(C.prompt(SV.aim)); else SV.prompt('');
+    listenerTick(); ambientTick(dt); compassTick(dt);
+    post.uniforms.uTime.value=SV.t; post.uniforms.uFlash.value=Math.max(0,post.uniforms.uFlash.value-dt*.9);
+    renderer.setRenderTarget(rt); renderer.render(C.scene,camera); renderer.setRenderTarget(null);
+    post.uniforms.tD.value=rt.texture; renderer.render(postScene,postCam);
+  }
+  requestAnimationFrame(SV.loop);
+};
+SV.setChapter=function(C){ if (SV.chapter && SV.chapter.exit) SV.chapter.exit(); SV.clearWaves(); blips.length=0; SV.chapter=C; SV.attachOrb(C.scene); C.enter(); };
+SV.fadeTo=function(fn,dur=1.4){ const u=post.uniforms.uFade, t0=performance.now(); const step=()=>{ const k=(performance.now()-t0)/(dur*500); if (k<1){ u.value=k; requestAnimationFrame(step); } else { u.value=1; fn(); const t1=performance.now(); const up=()=>{ const q=(performance.now()-t1)/(dur*500); u.value=Math.max(0,1-q); if (q<1) requestAnimationFrame(up); }; up(); } }; step(); };
+})();
+</script>
+<script>
+(()=>{
+'use strict';
+/* ===================== Chapter 1. 침묵의 숲 — 소리의 방향 =====================
+   A monochrome forest around a black lake. Throw the sound orb: the wave you see wakes up hidden
+   "memory crystals" that answer from their direction. Each one you bring back restores colour, motion and hearing.
+   Then the flower across the lake calls — waves on the water show the hidden stepping stones. */
+const SV=window.SV, T=SV.T, clamp=SV.clamp, lerp=SV.lerp;
+const scene=new T.Scene();
+const C1={ id:1, scene, interactables:[], orbNote:523.25, waveColor:0x9fe7ff, restore:0, restoreT:0, motion:0, found:0, phase:'start' };
+let rnd=(()=>{ let s=7; return ()=>{ s=(s*16807)%2147483647; return (s-1)/2147483646; }; })();
+
+/* ---------- sky, fog, light ---------- */
+scene.fog=new T.FogExp2(0x1a1c26,.034);
+scene.background=new T.Color(0x0d0e14);
+const skyTex=SV.canvasTex(512,512,(c,w,h)=>{ const g=c.createLinearGradient(0,0,0,h); g.addColorStop(0,'#0b0c16'); g.addColorStop(.45,'#2c3150'); g.addColorStop(.58,'#9aa6d6'); g.addColorStop(.66,'#3a3f63'); g.addColorStop(1,'#0b0c14'); c.fillStyle=g; c.fillRect(0,0,w,h);
+  const r=c.createRadialGradient(w*.5,h*.56,0,w*.5,h*.56,w*.32); r.addColorStop(0,'rgba(255,250,240,.95)'); r.addColorStop(1,'rgba(255,250,240,0)'); c.fillStyle=r; c.fillRect(0,0,w,h); });
+skyTex.wrapS=T.RepeatWrapping;
+const sky=new T.Mesh(new T.SphereGeometry(240,32,20),new T.MeshBasicMaterial({ map:skyTex, side:T.BackSide, fog:false, depthWrite:false }));
+sky.rotation.y=Math.PI*.5; scene.add(sky);
+const hemi=new T.HemisphereLight(0x9aa8e0,0x101018,.55), sun=new T.DirectionalLight(0xdfe6ff,.55), amb=new T.AmbientLight(0xffffff,.12);
+sun.position.set(-8,24,-60); scene.add(hemi,sun,amb);
+
+/* ---------- ground ---------- */
+const groundTex=SV.canvasTex(512,512,(c,w,h)=>{ c.fillStyle='#1d2a1e'; c.fillRect(0,0,w,h); for (let i=0;i<9000;i++){ const g=40+Math.random()*50|0; c.fillStyle=`rgba(${g*.6|0},${g|0},${g*.55|0},${.25+Math.random()*.3})`; c.fillRect(Math.random()*w,Math.random()*h,2,2+Math.random()*4); }
+  for (let i=0;i<500;i++){ c.fillStyle=`rgba(70,52,38,${.3+Math.random()*.3})`; c.beginPath(); c.arc(Math.random()*w,Math.random()*h,2+Math.random()*7,0,7); c.fill(); } });
+groundTex.wrapS=groundTex.wrapT=T.RepeatWrapping; groundTex.repeat.set(26,26);
+const ground=new T.Mesh(new T.CircleGeometry(95,64),new T.MeshStandardMaterial({ map:groundTex, roughness:1 })); ground.rotation.x=-Math.PI/2; scene.add(ground);
+
+/* ---------- the black lake (a long mirror like the concept art) ---------- */
+const LAKE={ x0:-9, x1:9, z0:-58, z1:-20 };
+const RIP=6, ripples=[]; for (let i=0;i<RIP;i++) ripples.push(new T.Vector4(0,0,-99,0));
+const waterMat=new T.ShaderMaterial({ transparent:false, fog:true,
+  uniforms:T.UniformsUtils.merge([T.UniformsLib.fog,{ uT:{value:0}, uR:{value:ripples}, uGlow:{value:0} }]),
+  vertexShader:`varying vec3 vW; varying vec3 vV;
+    #include <fog_pars_vertex>
+    void main(){ vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; vec4 mvPosition=viewMatrix*w; vV=normalize(cameraPosition-w.xyz); gl_Position=projectionMatrix*mvPosition;
+    #include <fog_vertex>
+    }`,
+  fragmentShader:`uniform float uT,uGlow; uniform vec4 uR[${RIP}]; varying vec3 vW; varying vec3 vV;
+    #include <fog_pars_fragment>
+    float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+    void main(){
+      float fres=pow(1.-max(vV.y,0.),3.);
+      float lane=exp(-pow(vW.x/4.5,2.))*smoothstep(-20.,-62.,vW.z);              // the bright misty gap mirrored down the middle
+      vec3 col=mix(vec3(.015,.02,.035),vec3(.62,.66,.82),fres*.55+lane*.55);
+      float tw=step(.995,h(floor(vW.xz*6.)+floor(uT*2.)))*fres; col+=tw*.8;       // sparkles
+      for (int i=0;i<${RIP};i++){ vec4 r=uR[i]; float age=uT-r.z; if (age<0.||age>5.) continue; float d=distance(vW.xz,r.xy);
+        float ring=exp(-pow(d-age*7.,2.)*.9)*exp(-age*.7)*r.w; col+=vec3(.55,.9,1.)*ring*1.4; }
+      col+=vec3(.35,.6,1.)*uGlow*lane*.25;
+      gl_FragColor=vec4(col,1.);
+      #include <fog_fragment>
+    }` });
+const water=new T.Mesh(new T.PlaneGeometry(LAKE.x1-LAKE.x0,LAKE.z1-LAKE.z0,1,1),waterMat); water.rotation.x=-Math.PI/2; water.position.set(0,.02,(LAKE.z0+LAKE.z1)/2); scene.add(water);
+let ripI=0; C1.ripple=(p,power)=>{ ripples[ripI++%RIP].set(p.x,p.z,SV.t,.6+power); };
+// stone rim of the lake
+const rimGeo=new T.DodecahedronGeometry(1,0), rimMat=new T.MeshStandardMaterial({ color:0x2a2b30, roughness:1, flatShading:true });
+const rims=[]; for (let z=LAKE.z1;z>=LAKE.z0;z-=1.6) [-1,1].forEach(s=>rims.push([s*(9+rnd()*.6),z+rnd()]));
+for (let x=-9;x<=9;x+=1.6){ rims.push([x,LAKE.z1+.5+rnd()*.4]); }
+const rimI=new T.InstancedMesh(rimGeo,rimMat,rims.length), o3=new T.Object3D();
+rims.forEach(([x,z],i)=>{ o3.position.set(x,-.15,z); o3.scale.set(.7+rnd()*.7,.35+rnd()*.3,.7+rnd()*.7); o3.rotation.set(rnd(),rnd()*6,rnd()); o3.updateMatrix(); rimI.setMatrixAt(i,o3.matrix); }); scene.add(rimI);
+
+/* ---------- forest ---------- */
+const ECHO_POS=[new T.Vector3(-21,0,-5), new T.Vector3(23,0,-15), new T.Vector3(-13,0,27)];
+const ISLAND=new T.Vector3(0,0,-67);
+const trunks=[];
+function freeSpot(x,z){ if (x>LAKE.x0-2.5 && x<LAKE.x1+2.5 && z>LAKE.z0-3 && z<LAKE.z1+3) return false; if (Math.hypot(x,z)<6) return false;
+  if (ECHO_POS.some(p=>Math.hypot(p.x-x,p.z-z)<5)) return false; if (Math.hypot(x-ISLAND.x,z-ISLAND.z)<9) return false; return true; }
+// rows of tall trees framing the lake, then a looser forest all around
+for (let z=-16;z>-72;z-=3.4) [-1,1].forEach(s=>{ const x=s*(12+rnd()*3); if (freeSpot(x,z)) trunks.push({ x, z, h:14+rnd()*8, r:.35+rnd()*.25 }); });
+for (let i=0;i<420 && trunks.length<230;i++){ const a=rnd()*Math.PI*2, d=7+Math.sqrt(rnd())*58, x=Math.cos(a)*d, z=Math.sin(a)*d*1.15-10; if (!freeSpot(x,z)) continue; if (trunks.some(t=>Math.hypot(t.x-x,t.z-z)<2.6)) continue; trunks.push({ x, z, h:10+rnd()*10, r:.28+rnd()*.3 }); }
+const trunkMat=new T.MeshStandardMaterial({ color:0x3b2f27, roughness:1 }), leafMat=new T.MeshStandardMaterial({ color:0x24452e, roughness:1, flatShading:true });
+const trI=new T.InstancedMesh(new T.CylinderGeometry(.75,1,1,7),trunkMat,trunks.length), lfI=new T.InstancedMesh(new T.IcosahedronGeometry(1,1),leafMat,trunks.length*3);
+trunks.forEach((t,i)=>{ o3.position.set(t.x,t.h/2,t.z); o3.rotation.set(0,rnd()*6,0); o3.scale.set(t.r,t.h,t.r); o3.updateMatrix(); trI.setMatrixAt(i,o3.matrix);
+  for (let k=0;k<3;k++){ o3.position.set(t.x+(rnd()-.5)*2.4,t.h*(.72+k*.12),t.z+(rnd()-.5)*2.4); const s=1.6+rnd()*1.8; o3.scale.set(s,s*.8,s); o3.updateMatrix(); lfI.setMatrixAt(i*3+k,o3.matrix);
+    lfI.setColorAt(i*3+k,new T.Color().setHSL(.33+rnd()*.12,.35+rnd()*.25,.12+rnd()*.1)); } });
+scene.add(trI,lfI);
+// light shafts at the far end of the lake
+const shaftTex=SV.canvasTex(64,256,(c,w,h)=>{ const g=c.createLinearGradient(0,0,0,h); g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(.4,'rgba(255,255,255,.35)'); g.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=g; c.fillRect(0,0,w,h);
+  const g2=c.createLinearGradient(0,0,w,0); g2.addColorStop(0,'rgba(0,0,0,1)'); g2.addColorStop(.5,'rgba(0,0,0,0)'); g2.addColorStop(1,'rgba(0,0,0,1)'); c.globalCompositeOperation='destination-out'; c.fillStyle=g2; c.fillRect(0,0,w,h); });
+const shafts=[]; for (let i=0;i<7;i++){ const m=new T.Mesh(new T.PlaneGeometry(2.5+rnd()*3,26),new T.MeshBasicMaterial({ map:shaftTex, transparent:true, opacity:.3, blending:T.AdditiveBlending, depthWrite:false, fog:false, side:T.DoubleSide }));
+  m.position.set((rnd()-.5)*14,11,-50-rnd()*20); m.rotation.z=(rnd()-.5)*.3; scene.add(m); shafts.push(m); }
+// floating motes (frozen at first: nothing moves where sound is gone)
+const MN=900, mp=new Float32Array(MN*3), mv=[]; for (let i=0;i<MN;i++){ mp[i*3]=(rnd()-.5)*110; mp[i*3+1]=.3+rnd()*14; mp[i*3+2]=(rnd()-.5)*130-10; mv.push(.2+rnd()*.6); }
+const mg=new T.BufferGeometry(); mg.setAttribute('position',new T.BufferAttribute(mp,3));
+const motes=new T.Points(mg,new T.PointsMaterial({ color:0xfff6e8, size:.13, transparent:true, opacity:.9, blending:T.AdditiveBlending, depthWrite:false, map:SV.glowTex }));
+scene.add(motes);
+// floating crystals in the sky of the forest (purple shards)
+const shards=[]; for (let i=0;i<16;i++){ const g=new T.OctahedronGeometry(.6+rnd()*.7,0); const m=new T.Mesh(g,SV.crystalMat(i%3?0xb07cff:0x8fd8ff,.6,.65)); m.scale.y=1.8;
+  const e=SV.edges(g,0xe6d8ff,.8); m.add(e); const a=rnd()*6.28, d=10+rnd()*40; m.position.set(Math.cos(a)*d,6+rnd()*10,Math.sin(a)*d-15); m.userData.ph=rnd()*6; scene.add(m); shards.push(m); }
+// runed crystal rocks (blue-violet, with glyphs) and glowing mushrooms near the memories
+const runeTex=SV.canvasTex(256,256,(c,w,h)=>{ const g=c.createLinearGradient(0,0,w,h); g.addColorStop(0,'#3a2a9a'); g.addColorStop(.5,'#5b3ad0'); g.addColorStop(1,'#2c4fc4'); c.fillStyle=g; c.fillRect(0,0,w,h);
+  for (let i=0;i<60;i++){ c.fillStyle=`rgba(${120+Math.random()*80|0},${80+Math.random()*80|0},255,.35)`; c.beginPath(); c.arc(Math.random()*w,Math.random()*h,8+Math.random()*30,0,7); c.fill(); }
+  c.strokeStyle='rgba(255,255,255,.85)'; c.lineWidth=3; const glyph=(x,y)=>{ c.beginPath(); for (let k=0;k<3;k++){ c.moveTo(x+Math.random()*14-7,y+Math.random()*14-7); c.lineTo(x+Math.random()*14-7,y+Math.random()*14-7); } c.stroke(); };
+  for (let i=0;i<40;i++) glyph(Math.random()*w,Math.random()*h); });
+const runeMat=new T.MeshStandardMaterial({ map:runeTex, emissive:0xffffff, emissiveMap:runeTex, emissiveIntensity:.35, roughness:.35, flatShading:true });
+const mushCols=[0xb98cff,0x8fe3ff,0x8dffcf,0xffa3c8];
+function decorate(p,seed){ for (let i=0;i<4;i++){ const g=new T.DodecahedronGeometry(.6+rnd()*.9,0); const m=new T.Mesh(g,runeMat); const a=rnd()*6.28, d=2.8+rnd()*1.8; m.position.set(p.x+Math.cos(a)*d,.2,p.z+Math.sin(a)*d); m.scale.set(1.4,.6+rnd()*.5,1); m.rotation.set(rnd(),rnd()*6,rnd()); scene.add(m); }
+  for (let i=0;i<7;i++){ const col=mushCols[(i+seed)%mushCols.length]; const h=.4+rnd()*1.1, a=rnd()*6.28, d=1.8+rnd()*2.6, x=p.x+Math.cos(a)*d, z=p.z+Math.sin(a)*d;
+    const stem=new T.Mesh(new T.CylinderGeometry(.04,.06,h,6),new T.MeshStandardMaterial({ color:0xeeeeff, emissive:0xffffff, emissiveIntensity:.15 })); stem.position.set(x,h/2,z);
+    const cap=new T.Mesh(new T.SphereGeometry(.22+h*.2,16,8,0,6.29,0,1.3),new T.MeshStandardMaterial({ color:col, emissive:col, emissiveIntensity:.6, transparent:true, opacity:.8, side:T.DoubleSide })); cap.position.set(x,h,z);
+    const gl=new T.Sprite(SV.glow(col,.5)); gl.position.set(x,h,z); gl.scale.setScalar(1.2); scene.add(stem,cap,gl); } }
+
+/* ---------- hidden sound-lines: shown only when a wave washes over them ---------- */
+const reveal=[]; // { obj, pos, lit, base, mats }
+function addReveal(obj,pos,base=0){ const mats=[]; obj.traverse(n=>{ if (n.material){ n.material.transparent=true; mats.push(n.material); n.material.userData.op=n.material.opacity; n.material.opacity=0; } }); reveal.push({ obj, pos:pos.clone(), lit:0, base, mats, seen:false }); scene.add(obj); return reveal[reveal.length-1]; }
+// glowing footprints that lead from the start toward each memory
+const stepTex=SV.canvasTex(64,128,(c,w,h)=>{ c.fillStyle='#fff'; c.beginPath(); c.ellipse(w/2,h*.62,w*.28,h*.28,0,0,7); c.fill(); c.beginPath(); c.ellipse(w/2,h*.2,w*.2,h*.14,0,0,7); c.fill(); });
+const ECHO_COL=[0x9fe7ff,0xff9fd8,0xc9b6ff];
+ECHO_POS.forEach((P,k)=>{ const dir=new T.Vector3(P.x,0,P.z).normalize(), L=Math.hypot(P.x,P.z);
+  for (let s=5,i=0;s<L-3.5;s+=1.6,i++){ const side=(i%2?1:-1)*.22, q=dir.clone().multiplyScalar(s); q.x+=-dir.z*side; q.z+=dir.x*side;
+    const m=new T.Mesh(new T.PlaneGeometry(.32,.62),new T.MeshBasicMaterial({ map:stepTex, color:ECHO_COL[k], transparent:true, blending:T.AdditiveBlending, depthWrite:false }));
+    m.rotation.x=-Math.PI/2; m.rotation.z=-Math.atan2(dir.x,-dir.z); m.position.set(q.x,.03,q.z); addReveal(m,q); } });
+// neon outlines on a few trees near each memory (sound reflected by the trunks)
+trunks.forEach(t=>{ const near=ECHO_POS.findIndex(p=>Math.hypot(p.x-t.x,p.z-t.z)<12); if (near<0 && rnd()>.12) return;
+  const g=new T.CylinderGeometry(t.r*.75,t.r,t.h,7); const e=SV.edges(g,near>=0?ECHO_COL[near]:0x8ff3ff,.9); e.position.set(t.x,t.h/2,t.z); addReveal(e,new T.Vector3(t.x,0,t.z)); });
+
+/* ---------- memory crystals (the echoes) ---------- */
+const ECHO_NOTE=[523.25,659.25,783.99];
+const MEM=[
+  ['“괜찮아?” 누군가 나를 불렀는데, 고개를 돌리지 못했어.<br>그 소리가 어디서 오는지 알 수 없어서.','기억의 조각 1 · 부르는 목소리'],
+  ['그날 이후로 세상은 물속처럼 멀어졌어.<br>듣지 못한 게 아니라, 듣는 게 무서웠던 건지도 몰라.','기억의 조각 2 · 멀어진 세상'],
+  ['그래도 그 노래만은 기억나.<br>내가 좋아하던 오래된 노래의, 첫 음.','기억의 조각 3 · 첫 음'] ];
+const echoes=ECHO_POS.map((p,k)=>{
+  decorate(p,k);
+  const g=new T.Group(); g.position.copy(p);
+  const base=new T.Mesh(new T.DodecahedronGeometry(1.1,0),new T.MeshStandardMaterial({ color:0x25232e, roughness:1, flatShading:true })); base.scale.set(1.2,.55,1.2); base.position.y=.2;
+  const cg=new T.OctahedronGeometry(.55,0); const crystal=new T.Mesh(cg,SV.crystalMat(ECHO_COL[k],.75,.25)); crystal.scale.set(1,1.7,.7); crystal.position.y=1.7;
+  const ce=SV.edges(cg,0xffffff,.5); crystal.add(ce);
+  const eye=new T.Mesh(new T.TorusGeometry(.17,.05,10,32),new T.MeshBasicMaterial({ color:0x120d1e })); eye.position.set(0,0,.36); crystal.add(eye);
+  const eyeGlow=new T.Sprite(SV.glow(ECHO_COL[k],.0)); eyeGlow.scale.setScalar(1.6); crystal.add(eyeGlow);
+  // spiky flower beside it (blooms when collected)
+  const flower=new T.Group(); for (let i=0;i<9;i++){ const pet=new T.Mesh(new T.ConeGeometry(.08,.9,5),new T.MeshStandardMaterial({ color:0xdde8ff, emissive:ECHO_COL[k], emissiveIntensity:.4, transparent:true, opacity:.85 })); pet.position.y=.45; const hold=new T.Group(); hold.add(pet); hold.rotation.set(.5,i/9*6.28,0); flower.add(hold); }
+  flower.position.set(.95,.35,.4); flower.scale.setScalar(.6);
+  const halo=new T.Sprite(SV.glow(ECHO_COL[k],0)); halo.scale.setScalar(5); halo.position.y=1.6;
+  g.add(base,crystal,flower,halo); scene.add(g);
+  g.userData={ kind:'echo', k };
+  C1.interactables.push(g);
+  return { g, crystal, eyeGlow, halo, flower, k, awake:false, got:false, pingT:0, note:ECHO_NOTE[k], col:ECHO_COL[k] };
+});
+
+/* ---------- the giant crystal flower across the lake ---------- */
+const flower=new T.Group(); flower.position.copy(ISLAND); scene.add(flower);
+const isle=new T.Mesh(new T.CylinderGeometry(7.5,8.5,.6,32),new T.MeshStandardMaterial({ color:0x262833, roughness:1 })); isle.position.y=-.2; flower.add(isle);
+const petals=[]; const pg=new T.OctahedronGeometry(1,0);
+for (let ring=0;ring<2;ring++) for (let i=0;i<9;i++){ const hold=new T.Group(); hold.rotation.y=i/9*Math.PI*2+ring*.35; const m=new T.Mesh(pg,SV.crystalMat(ring?0xd9c2ff:0xb9a6ff,.42,.45)); m.scale.set(.9,ring?3.2:4.2,.35); m.position.y=ring?3:4;
+  const e=SV.edges(pg,0xf0e6ff,.7); m.add(e); const tilt=new T.Group(); tilt.add(m); tilt.position.z=ring?1.2:1.8; hold.add(tilt); flower.add(hold); petals.push({ tilt, ring }); tilt.rotation.x=-.12; }
+const heart=new T.Group(); heart.position.y=4; flower.add(heart);
+[0,1,2].forEach(i=>{ const tr=new T.Mesh(new T.TorusGeometry(.5+i*.32,.07,10,40),new T.MeshBasicMaterial({ color:i===1?0xe6ff6a:0xbfe9ff, transparent:true, opacity:.0, blending:T.AdditiveBlending, depthWrite:false })); tr.rotation.x=Math.PI/2+i*.4; heart.add(tr); });
+const spikes=new T.LineSegments(new T.BufferGeometry(),new T.LineBasicMaterial({ color:0x9fd8ff, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false }));
+{ const a=[]; for (let i=0;i<80;i++){ const th=i/80*Math.PI*2, ph=(i%7)/7*1.2-.6, r1=.6, r2=2.2+(i%3)*.6; a.push(Math.cos(th)*r1,Math.sin(ph)*r1,Math.sin(th)*r1, Math.cos(th)*r2,Math.sin(ph)*r2,Math.sin(th)*r2); } spikes.geometry.setAttribute('position',new T.Float32BufferAttribute(a,3)); }
+heart.add(spikes);
+const heartGlow=new T.Sprite(SV.glow(0xd8c8ff,.25)); heartGlow.scale.setScalar(5); heart.add(heartGlow);
+flower.userData={ kind:'flower' }; C1.interactables.push(flower);
+// waveform beam (concept art: the sound wave flowing into the flower)
+const BEAMN=260, beamGeo=new T.BufferGeometry(); beamGeo.setAttribute('position',new T.BufferAttribute(new Float32Array(BEAMN*3),3));
+const beams=[0x8ff3ff,0xff9fe0].map(c=>{ const l=new T.Line(beamGeo.clone(),new T.LineBasicMaterial({ color:c, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false })); l.frustumCulled=false; scene.add(l); return l; });
+let bloomT=-1;
+
+/* ---------- hidden stepping stones across the lake ---------- */
+const STONES=[[0,-21.5],[-1.6,-24.6],[-3.6,-27.4],[-3,-30.6],[-.6,-33.2],[2.2,-35.6],[3.6,-38.8],[2.4,-42],[-.4,-44.4],[-2.8,-47.2],[-2.2,-50.6],[.2,-53.4],[.6,-56.6]];
+const stones=STONES.map(([x,z])=>{ const g=new T.Group(); const top=new T.Mesh(new T.CylinderGeometry(1.05,1.2,.25,20),new T.MeshStandardMaterial({ color:0x3a3d52, emissive:0x8ff3ff, emissiveIntensity:.25, transparent:true }));
+  const ring=new T.Mesh(new T.RingGeometry(1.0,1.18,40),new T.MeshBasicMaterial({ color:0x9fe7ff, transparent:true, blending:T.AdditiveBlending, side:T.DoubleSide, depthWrite:false })); ring.rotation.x=-Math.PI/2; ring.position.y=.14;
+  g.add(top,ring); g.position.set(x,.0,z); const r=addReveal(g,new T.Vector3(x,0,z)); r.stone=true; return r; });
+
+/* ---------- the orb waiting at the start ---------- */
+const orbHome=new T.Vector3(0,1.35,-4.5);
+
+/* ---------- rules ---------- */
+function inLake(x,z){ return x>LAKE.x0 && x<LAKE.x1 && z>LAKE.z0 && z<LAKE.z1; }
+C1.walkable=(x,z)=>{
+  const ex=x/50, ez=(z+10)/64; if (ex*ex+ez*ez>1) return false;
+  if (z<LAKE.z1+.6){ // beyond the shore: only the hidden stones and the island
+    if (onStonePath(x,z)>=0) return true;
+    const di=Math.hypot(x-ISLAND.x,z-ISLAND.z); if (di<7.6 && di>3.2) return true;
+    if (z<LAKE.z0 && z>LAKE.z0-2.2 && Math.abs(x)<1.6) return true; // last step onto the island
+    return false; }
+  for (const t of trunks){ const dx=t.x-x, dz=t.z-z; if (dx*dx+dz*dz<(t.r+.35)*(t.r+.35)) return false; }
+  for (const e of echoes){ if (Math.hypot(e.g.position.x-x,e.g.position.z-z)<1.5) return false; }
+  return true; };
+/* the stones you have seen form a path: you hop from one glowing stone to the next */
+function stonePts(){ const pts=[{x:0,z:LAKE.z1+.4,seen:true}]; stones.forEach(s=>pts.push({x:s.pos.x,z:s.pos.z,seen:s.seen})); pts.push({x:0,z:LAKE.z0-1.2,seen:true}); return pts; }
+function onStonePath(x,z){ const pts=stonePts();
+  for (let i=1;i<pts.length-1;i++) if (pts[i].seen && Math.hypot(pts[i].x-x,pts[i].z-z)<1.3) return 0;
+  for (let i=0;i<pts.length-1;i++){ const a=pts[i], b=pts[i+1]; if (!a.seen||!b.seen) continue; const vx=b.x-a.x, vz=b.z-a.z, L2=vx*vx+vz*vz, t=Math.max(0,Math.min(1,((x-a.x)*vx+(z-a.z)*vz)/L2)), px=a.x+vx*t-x, pz=a.z+vz*t-z; if (px*px+pz*pz<.8*.8) return t; }
+  return -1; }
+C1.groundY=(x,z)=>{ if (inLake(x,z)){ const t=onStonePath(x,z); return .14+(t>0&&t<1?Math.sin(t*Math.PI)*.55:0); } if (Math.hypot(x-ISLAND.x,z-ISLAND.z)<8) return .1; return 0; };
+C1.collide=(p,prev)=>{
+  for (const e of echoes){ if (!e.got && p.distanceTo(V.set(e.g.position.x,1.6,e.g.position.z))<1.1) return { point:p.clone(), kind:'echo', echo:e }; }
+  if (p.distanceTo(V.set(ISLAND.x,4,ISLAND.z))<4.5) return { point:p.clone(), kind:'flower' };
+  for (const t of trunks){ const dx=t.x-p.x, dz=t.z-p.z; if (p.y<t.h && dx*dx+dz*dz<(t.r+.12)*(t.r+.12)) return { point:p.clone(), kind:'tree' }; }
+  if (p.y<=.05){ return { point:new T.Vector3(p.x,0,p.z), kind:inLake(p.x,p.z)?'water':'ground' }; }
+  return null; };
+const V=new T.Vector3();
+
+/* ---------- progress: colour, motion and hearing come back ---------- */
+function setRestore(k){ C1.restoreT=k; SV.AU.hearing(k); SV.AU.ambient({ wind:Math.min(1,k*2), drip:k>.5?k:0, birds:k>.9?.8:0, pad:k>.9?.6:k*.25 }); }
+function awaken(e,delay){
+  if (e.awake || e.got) return; e.awake=true;
+  SV.later(()=>answer(e,1),delay*1000);
+  if (C1.phase==='throw1'||C1.phase==='find'){ C1.phase='find'; }
+}
+function answer(e,strength){
+  const p=e.g.position.clone(); p.y=1.7;
+  SV.AU.tone(p,{ f:e.note, kind:'chime', dur:2.6, vol:.32*strength }); SV.AU.tone(p,{ f:e.note*1.5, kind:'chime', dur:2, vol:.14*strength, delay:.22 });
+  SV.wave(p,.15,{ color:e.col, maxR:7, speed:7, src:'echo' }); SV.blip(p,'#'+new T.Color(e.col).getHexString(),1.2);
+}
+function collect(e){
+  e.got=true; C1.found++; SV.pips(C1.found,3);
+  const p=e.g.position.clone(); p.y=1.7;
+  SV.AU.tone(p,{ f:e.note, kind:'bell', dur:4, vol:.45 }); SV.AU.tone(null,{ f:e.note*2, kind:'chime', dur:3, vol:.18, delay:.3 });
+  SV.wave(p,1,{ color:e.col, maxR:30, speed:14, src:'memory' }); SV.flash(.35);
+  SV.memory(MEM[e.k][0],MEM[e.k][1],8);
+  setRestore(C1.found/3);
+  e.flying=0;
+  if (C1.found<3) SV.objective('대답하는 소리를 따라 기억의 결정을 찾아요 ('+C1.found+'/3)','구슬을 던지면 빛의 물결이 퍼져요. 물결이 닿은 결정이 그 자리에서 대답해요. 우클릭(Q)으로 소리의 방향을 볼 수 있어요.');
+  else { C1.phase='lake'; SV.later(()=>{ SV.objective('호수 건너 크리스털 꽃이 부르고 있어요','호수에 구슬을 던지면 물결이 숨겨진 징검다리를 비춰요. 빛나는 돌만 밟을 수 있어요.'); callFlower(); },3500); }
+}
+let flowerPing=0;
+function callFlower(){ const p=new T.Vector3(ISLAND.x,4,ISLAND.z); [523.25,659.25,783.99].forEach((f,i)=>SV.AU.tone(p,{ f, kind:'chime', dur:3.5, vol:.3, delay:i*.25 })); SV.wave(p,.6,{ color:0xd8c8ff, maxR:16, speed:8, src:'flower' }); SV.blip(p,'#d8c8ff',1.4); }
+
+/* ---------- interaction ---------- */
+C1.canInteract=a=>{ const k=a.obj.userData.kind; if (k==='orbIdle') return true; if (k==='echo'){ const e=echoes[a.obj.userData.k]; return a.dist<3.6 && e.awake && !e.got; } return false; };
+C1.interact=a=>{ const k=a.obj.userData.kind;
+  if (k==='orbIdle' && a.dist<9){ pickOrb(); return; }
+  if (k==='echo'){ const e=echoes[a.obj.userData.k]; if (e.got) return; if (!e.awake){ SV.memory('차갑게 잠들어 있어요. 소리로 깨워야 해요.','',3); return; } if (a.dist<3.6) collect(e); }
+};
+C1.prompt=a=>{
+  if (!a) return C1.phase==='start'?'':'';
+  const k=a.obj.userData.kind;
+  if (k==='orbIdle') return a.dist<9?'<kbd>클릭</kbd> 빛나는 입자 잡기':'빛나는 입자에 다가가요';
+  if (k==='echo'){ const e=echoes[a.obj.userData.k]; if (e.got) return ''; if (!e.awake) return '잠든 결정 · 구슬을 던져 소리로 깨워요'; return a.dist<3.6?'<kbd>클릭</kbd> 기억의 결정 품기':'대답하는 결정 · 더 가까이'; }
+  if (k==='flower') return C1.found<3?'아직 닫혀 있어요 · 기억의 결정 '+C1.found+'/3':'호수를 건너 꽃에게 가요';
+  return ''; };
+function pickOrb(){ SV.orb.state='return'; SV.orb.mesh.userData.kind='orb'; C1.interactables=C1.interactables.filter(o=>o!==SV.orb.mesh); C1.phase='throw1';
+  SV.AU.tone(null,{ f:523.25, kind:'soft', dur:1.4, vol:.3 }); SV.AU.tone(null,{ f:783.99, kind:'soft', dur:1.6, vol:.2, delay:.15 });
+  SV.memory('손끝에 따뜻한 진동이 느껴져요.<br>들리지 않는데도, 이건 분명 소리예요.','소리 구슬 · Sound Orb',5);
+  SV.objective('구슬을 꾹 눌렀다 떼서 던져 보세요','오래 누를수록 멀리 날아가고, 물결도 크게 퍼져요.'); }
+C1.onThrow=()=>{};
+C1.onImpact=(h,power)=>{
+  if (C1.phase==='throw1'){ C1.phase='find'; SV.later(()=>{ SV.memory('소리가 빛의 물결이 되어 퍼져요.<br>물결이 닿은 곳에서… 무언가 대답했어요.','',5); SV.objective('대답하는 소리를 따라 기억의 결정을 찾아요 (0/3)','물결이 닿은 결정이 그 자리에서 대답해요. 화면 아래 소리 나침반과 우클릭(Q)으로 방향을 볼 수 있어요.'); },700); }
+  if (h.kind==='echo' && h.echo){ awaken(h.echo,.2); }
+};
+C1.onWave=w=>{
+  if (w.src==='echo' || w.src==='flower') { /* their own answers light their surroundings */ }
+  reveal.forEach(r=>{ const d=Math.hypot(r.pos.x-w.p.x,r.pos.z-w.p.z); if (Math.abs(d-w.r)<1.7 && w.r<w.maxR){ r.lit=1; r.seen=true; } });
+  if (w.src==='orb' || w.src==='memory') echoes.forEach(e=>{ if (e.awake||e.got) return; const d=Math.hypot(e.g.position.x-w.p.x,e.g.position.z-w.p.z); if (d<w.r && d<w.maxR) awaken(e,d/14); });
+  if (C1.phase==='lake' && w.src==='orb'){ const d=Math.hypot(ISLAND.x-w.p.x,ISLAND.z-w.p.z); if (!w.flowerHit && d<w.r){ w.flowerHit=true; SV.later(callFlower,d/14*1000); } }
+};
+C1.listenSources=()=>{ const out=[]; echoes.forEach(e=>{ if (e.awake && !e.got) out.push({ pos:e.g.position, col:'#'+new T.Color(e.col).getHexString() }); }); if (C1.found>=3 && bloomT<0) out.push({ pos:ISLAND, col:'#d8c8ff' }); return out; };
+
+/* ---------- per frame ---------- */
+C1.update=(dt,t)=>{
+  C1.restore=lerp(C1.restore,C1.restoreT,Math.min(1,dt*.6)); const k=C1.restore;
+  C1.motion=lerp(C1.motion,.08+.92*k,Math.min(1,dt*.5)); const mo=C1.motion;
+  SV.post.uniforms.uSat.value=k*1.05; SV.post.uniforms.uGlow.value=.45+.4*k;
+  scene.fog.density=lerp(.034,.018,k); hemi.intensity=.55+.35*k; sun.intensity=.55+.4*k;
+  waterMat.uniforms.uT.value=t; waterMat.uniforms.uGlow.value=k;
+  // motes drift only as much as the world has started to move again
+  const P=mg.attributes.position.array; for (let i=0;i<MN;i++){ P[i*3+1]+=mv[i]*dt*.25*mo; P[i*3]+=Math.sin(t*.3+i)*dt*.1*mo; if (P[i*3+1]>15) P[i*3+1]=.3; } mg.attributes.position.needsUpdate=true;
+  shards.forEach(s=>{ s.rotation.y+=dt*.25*mo; s.position.y+=Math.sin(t*.6+s.userData.ph)*dt*.25*mo; });
+  shafts.forEach((s,i)=>{ s.material.opacity=(.18+.12*k)*(.8+.2*Math.sin(t*.4+i)); });
+  // hidden lines fade back out
+  reveal.forEach(r=>{ r.lit=Math.max(0,r.lit-dt*(r.stone?.22:.35)); const a=Math.max(r.lit,r.stone&&r.seen?.18+.12*k:r.base); r.mats.forEach(m=>m.opacity=(m.userData.op||1)*a); });
+  // memories
+  echoes.forEach(e=>{
+    if (e.got){ if (e.flying!=null && e.flying<1){ e.flying+=dt*.8; const tgt=SV.camera.position; e.crystal.position.lerp(e.g.worldToLocal(tgt.clone()),Math.min(1,dt*2.5)); e.crystal.scale.multiplyScalar(1-dt*.9); if (e.flying>=1) e.crystal.visible=false; }
+      e.flower.scale.setScalar(lerp(e.flower.scale.x,1.2,dt)); e.halo.material.opacity=lerp(e.halo.material.opacity,.25,dt); return; }
+    const pulse=e.awake?.55+.45*Math.sin(t*3+e.k):0;
+    e.crystal.material.emissiveIntensity=e.awake?.6+.6*pulse:.12; e.eyeGlow.material.opacity=e.awake?.6*pulse:0; e.halo.material.opacity=e.awake?.25+.25*pulse:0;
+    e.crystal.rotation.y+=dt*(e.awake?.8:.05); e.crystal.position.y=1.7+Math.sin(t*1.5+e.k)*(e.awake?.12:.0);
+    if (e.awake){ e.pingT-=dt; if (e.pingT<=0){ e.pingT=4.2; answer(e,.55); } }
+  });
+  // the flower
+  const fk=C1.found/3;
+  heartGlow.material.opacity=.15+.35*fk+(bloomT>=0?.5:0); heart.rotation.y+=dt*(.1+fk*.6);
+  heart.children.forEach((c,i)=>{ if (c.material && c.type==='Mesh') c.material.opacity=fk*.75; });
+  spikes.material.opacity=fk*.6; spikes.rotation.y-=dt*.2;
+  if (C1.phase==='lake'){ flowerPing-=dt; if (flowerPing<=0){ flowerPing=6; callFlower(); } }
+  if (C1.phase==='lake' && Math.hypot(SV.P.pos.x-ISLAND.x,SV.P.pos.z-ISLAND.z)<9.5) startBloom();
+  if (bloomT>=0){ bloomT+=dt; const b=clamp(bloomT/4,0,1), e=1-Math.pow(1-b,3);
+    petals.forEach(p=>{ p.tilt.rotation.x=-.12-e*(p.ring?.95:1.2); });
+    // waveform pouring into the flower
+    beams.forEach((l,j)=>{ const a=l.geometry.attributes.position.array, from=SV.camera.position, to=new T.Vector3(ISLAND.x,4,ISLAND.z);
+      for (let i=0;i<BEAMN;i++){ const u=i/(BEAMN-1), x=lerp(from.x+.4,to.x,u), z=lerp(from.z-1,to.z,u), env=Math.sin(u*Math.PI)*(1.4-u*.6);
+        a[i*3]=x; a[i*3+1]=lerp(from.y-.3,to.y,u)+Math.sin(u*70-t*14+j*1.7)*env*(.5+.5*Math.sin(u*9+t*3)); a[i*3+2]=z; }
+      l.geometry.attributes.position.needsUpdate=true; l.material.opacity=Math.min(.9,bloomT*.4)*(bloomT<9?1:Math.max(0,1-(bloomT-9)/2)); });
+  }
+  sky.rotation.y+=dt*.003*mo;
+};
+function startBloom(){
+  if (bloomT>=0) return; bloomT=0; C1.phase='bloom'; SV.P.frozen=true;
+  const p=new T.Vector3(ISLAND.x,4,ISLAND.z);
+  SV.AU.chord('open'); SV.AU.ambient({ pad:1, birds:1 });
+  [523.25,659.25,783.99,1046.5].forEach((f,i)=>SV.AU.tone(p,{ f, kind:'bell', dur:5, vol:.35, delay:i*.45 }));
+  SV.wave(p,1,{ color:0xd8c8ff, maxR:40, speed:9, src:'flower' }); SV.shake=.6;
+  SV.later(()=>{ SV.flash(.6); SV.memory('소리는 사라진 게 아니었어.<br>내가 등을 돌리고 있었을 뿐이야.','',7); },2600);
+  SV.later(()=>SV.card('CHAPTER 1 COMPLETE','소리의 방향','잃어버린 감각에 대한 두려움을 처음으로 마주했어요.<br>소리는 퍼져 나가고, 그 방향을 따라가면 닿을 수 있어요.',5),8200);
+  SV.later(()=>SV.fadeTo(()=>SV.goChapter(2)),13500);
+}
+
+/* ---------- enter / exit ---------- */
+C1.enter=()=>{
+  const P=SV.P; P.pos.set(0,1.62,6); P.yaw=0; P.pitch=-.05; P.frozen=false;
+  C1.found=0; C1.phase='start'; C1.restore=0; C1.restoreT=0; C1.motion=0; bloomT=-1; flowerPing=0;
+  echoes.forEach(e=>{ e.awake=false; e.got=false; e.flying=null; e.crystal.visible=true; e.crystal.position.set(0,1.7,0); e.crystal.scale.set(1,1.7,.7); e.flower.scale.setScalar(.6); });
+  petals.forEach(p=>p.tilt.rotation.x=-.12); beams.forEach(l=>l.material.opacity=0);
+  reveal.forEach(r=>{ r.lit=0; r.seen=false; });
+  const o=SV.orb; o.state='idle'; o.home=orbHome; o.mesh.visible=true; o.mesh.userData.kind='orbIdle'; C1.interactables=C1.interactables.filter(x=>x!==o.mesh); C1.interactables.push(o.mesh);
+  SV.pips(0,3); SV.chapterLabel('Chapter 1','침묵의 숲 — 소리의 방향');
+  SV.post.uniforms.uSat.value=0; SV.AU.chord('forest'); SV.AU.hearing(0,.1); SV.AU.ambient({ wind:0, drip:0, birds:0, pad:0 },.1);
+  SV.card('CHAPTER 1','침묵의 숲','소리의 방향 — 아무 소리도, 아무 움직임도 없는 숲',4.5);
+  SV.later(()=>SV.objective('희미하게 빛나는 입자를 찾아 잡아 보세요','가운데 점을 입자에 맞추고 클릭해요.'),1200);
+};
+C1.exit=()=>{ SV.P.frozen=false; };
+C1._stones=()=>stones.map(s=>s.seen?1:0).join("");
+SV.C1=C1;
+})();
+</script>
+<script>
+(()=>{
+'use strict';
+/* ===================== Chapter 2. 공명의 동굴 — 소리의 높낮이 =====================
+   Five crystals ring at different pitches (bigger = lower). The cave door sings a melody; one crystal is cracked and
+   out of tune — tune it with the mouse wheel until the beating between the two sounds disappears (resonance),
+   then strike the melody in order to open the door. */
+const SV=window.SV, T=SV.T, clamp=SV.clamp, lerp=SV.lerp, el=SV.el;
+const scene=new T.Scene();
+const C2={ id:2, scene, interactables:[], orbNote:587.33, waveColor:0xc9b6ff, phase:'start' };
+let rnd=(()=>{ let s=11; return ()=>{ s=(s*16807)%2147483647; return (s-1)/2147483646; }; })();
+const V=new T.Vector3();
+
+scene.background=new T.Color(0x060818); scene.fog=new T.FogExp2(0x0b1236,.028);
+const hemi=new T.HemisphereLight(0x7d8cff,0x0a0a22,.6), amb=new T.AmbientLight(0xffffff,.14); scene.add(hemi,amb);
+const pink=new T.PointLight(0xff6ad5,1.4,30,2); pink.position.set(0,6,-20); const teal=new T.PointLight(0x5ff2ff,1.2,26,2); teal.position.set(0,4,-4); scene.add(pink,teal);
+
+/* ---------- floor with a pale winding path (concept art 3) ---------- */
+const floorTex=SV.canvasTex(1024,1024,(c,w,h)=>{ c.fillStyle='#0d1230'; c.fillRect(0,0,w,h);
+  for (let i=0;i<5000;i++){ c.fillStyle=`rgba(${30+Math.random()*30|0},${40+Math.random()*30|0},${90+Math.random()*50|0},${.3+Math.random()*.3})`; c.fillRect(Math.random()*w,Math.random()*h,3+Math.random()*8,2); }
+  c.strokeStyle='rgba(150,175,230,.55)'; c.lineCap='round'; c.lineWidth=90; c.beginPath(); c.moveTo(w*.5,h); c.bezierCurveTo(w*.62,h*.75,w*.38,h*.55,w*.5,h*.35); c.lineTo(w*.5,0); c.stroke();
+  c.strokeStyle='rgba(190,215,255,.35)'; c.lineWidth=40; c.stroke(); });
+const floor=new T.Mesh(new T.PlaneGeometry(60,80),new T.MeshStandardMaterial({ map:floorTex, roughness:.95 })); floor.rotation.x=-Math.PI/2; floor.position.set(0,0,-12); scene.add(floor);
+
+/* ---------- tall dark pillars with glowing mushrooms (concept art 3) ---------- */
+const pillars=[]; const pilMat=new T.MeshStandardMaterial({ color:0x161a3e, roughness:.9, flatShading:true });
+for (let z=14;z>-24;z-=4.6) [-1,1].forEach(s=>pillars.push({ x:s*(13.5+rnd()*2), z:z+rnd()*1.5, r:1.2+rnd()*1.1, h:22+rnd()*10 }));
+[[-7,-15],[7.5,-14],[-9,4],[9,6],[-10,-21],[10,-21.5],[-4,-23.5],[4,-23.5]].forEach(([x,z])=>pillars.push({ x, z, r:.9+rnd()*.6, h:20+rnd()*8 }));
+pillars.forEach(p=>{ const m=new T.Mesh(new T.CylinderGeometry(p.r*.85,p.r,p.h,6),pilMat); m.position.set(p.x,p.h/2,p.z); m.rotation.y=rnd()*3; scene.add(m); });
+const mush=[]; pillars.forEach(p=>{ const n=8+rnd()*10|0; for (let i=0;i<n;i++){ const a=rnd()*6.28, y=.5+rnd()*12; mush.push({ x:p.x+Math.cos(a)*(p.r*.9+.05), y, z:p.z+Math.sin(a)*(p.r*.9+.05), s:.08+rnd()*.12 }); } });
+const mushMat=new T.MeshBasicMaterial({ color:0x8dffcf }); const mushI=new T.InstancedMesh(new T.SphereGeometry(1,8,6),mushMat,mush.length); const o3=new T.Object3D();
+mush.forEach((m,i)=>{ o3.position.set(m.x,m.y,m.z); o3.scale.set(m.s,m.s*.7,m.s); o3.updateMatrix(); mushI.setMatrixAt(i,o3.matrix); }); scene.add(mushI);
+// falling glowing spores
+const SN=500, sp=new Float32Array(SN*3); for (let i=0;i<SN;i++){ sp[i*3]=(rnd()-.5)*30; sp[i*3+1]=rnd()*16; sp[i*3+2]=(rnd()-.5)*44-6; }
+const sg=new T.BufferGeometry(); sg.setAttribute('position',new T.BufferAttribute(sp,3));
+const spores=new T.Points(sg,new T.PointsMaterial({ color:0xa8ffe0, size:.12, map:SV.glowTex, transparent:true, blending:T.AdditiveBlending, depthWrite:false })); scene.add(spores);
+// pink crystal clusters along the walls
+const clusters=[]; for (let i=0;i<34;i++){ const s=rnd()<.5?-1:1, x=s*(9+rnd()*4), z=14-rnd()*38; clusters.push([x,z]); }
+const cgeo=new T.OctahedronGeometry(1,0), cmat=SV.crystalMat(0xffb3e8,.65,.6);
+clusters.forEach(([x,z])=>{ const n=3+rnd()*4|0; for (let i=0;i<n;i++){ const m=new T.Mesh(cgeo,cmat); m.scale.set(.18+rnd()*.15,.6+rnd()*1.2,.18+rnd()*.15); m.position.set(x+(rnd()-.5)*1.2,.3,z+(rnd()-.5)*1.2); m.rotation.set((rnd()-.5)*.9,rnd()*3,(rnd()-.5)*.9); scene.add(m); } });
+// blue ring-capped mushrooms (concept art 3, left)
+const ringCap=SV.canvasTex(128,128,(c,w,h)=>{ c.fillStyle='#0b1a4a'; c.fillRect(0,0,w,h); for (let r=60;r>4;r-=12){ c.strokeStyle=r%24?'#7fd6ff':'#1b3a8a'; c.lineWidth=6; c.beginPath(); c.arc(w/2,h/2,r,0,7); c.stroke(); } });
+[[-8,8],[-9.5,-3],[8.5,-8],[9,10],[-6,-12]].forEach(([x,z])=>{ for (let i=0;i<3;i++){ const h=.6+rnd()*.9, cx=x+(rnd()-.5)*1.6, cz=z+(rnd()-.5)*1.6; const stem=new T.Mesh(new T.CylinderGeometry(.05,.08,h,6),new T.MeshStandardMaterial({ color:0x1d2a66 })); stem.position.set(cx,h/2,cz);
+  const cap=new T.Mesh(new T.CylinderGeometry(.55,.62,.08,24),new T.MeshStandardMaterial({ map:ringCap, emissive:0xffffff, emissiveMap:ringCap, emissiveIntensity:.8 })); cap.position.set(cx,h,cz); scene.add(stem,cap); } });
+// tall purple pods with pink glowing bulbs by the door (concept art 4)
+const pods=[]; [[-6.5,-19],[6.5,-19],[-9.5,-16],[9.5,-16]].forEach(([x,z],i)=>{ const g=new T.Group(); g.position.set(x,0,z);
+  const stalk=new T.Mesh(new T.CylinderGeometry(.35,.6,7,10),new T.MeshStandardMaterial({ color:0x2a1450, emissive:0x5a1ea0, emissiveIntensity:.35 })); stalk.position.y=4.5; stalk.rotation.z=(i%2?-1:1)*.12;
+  const bulbs=new T.Group(); for (let k=0;k<26;k++){ const b=new T.Mesh(new T.SphereGeometry(.12+rnd()*.14,10,8),new T.MeshBasicMaterial({ color:k%3?0xffb0f0:0xffe3c4 })); const a=rnd()*6.28; b.position.set(Math.cos(a)*(.7+rnd()*.4),.5+rnd()*1.3,Math.sin(a)*(.7+rnd()*.4)); bulbs.add(b); }
+  const gl=new T.Sprite(SV.glow(0xff7ae0,.45)); gl.scale.setScalar(5); gl.position.y=1.2; g.add(stalk,bulbs,gl); scene.add(g); pods.push({ g, gl }); });
+
+/* ---------- the resonance platform (concept art 4) ---------- */
+const padTex=SV.canvasTex(512,512,(c,w,h)=>{ c.fillStyle='#120c2e'; c.fillRect(0,0,w,h); c.translate(w/2,h/2);
+  [240,200,150].forEach((r,i)=>{ c.strokeStyle=i===1?'#c9b6ff':'#8ff3ff'; c.lineWidth=i===1?10:5; c.beginPath(); c.arc(0,0,r,0,7); c.stroke(); });
+  for (let i=0;i<48;i++){ c.rotate(Math.PI*2/48); c.fillStyle=i%2?'rgba(200,180,255,.7)':'rgba(140,240,255,.5)'; c.fillRect(160,-4,30,8); }
+  c.fillStyle='rgba(230,220,255,.85)'; for (let i=0;i<5;i++) c.fillRect(-90+i*38,-14,26,28); });
+const pad=new T.Mesh(new T.CylinderGeometry(3.6,3.9,.25,48),[new T.MeshStandardMaterial({ color:0x2a2050 }),new T.MeshStandardMaterial({ map:padTex, emissive:0xffffff, emissiveMap:padTex, emissiveIntensity:.55 }),new T.MeshStandardMaterial({ color:0x2a2050 })]);
+pad.position.set(0,.12,-6); scene.add(pad);
+const padBeam=new T.Mesh(new T.CylinderGeometry(3.4,3.4,14,40,1,true),new T.MeshBasicMaterial({ color:0x8ff3ff, transparent:true, opacity:.0, blending:T.AdditiveBlending, depthWrite:false, side:T.DoubleSide })); padBeam.position.set(0,7,-6); scene.add(padBeam);
+
+/* ---------- the five crystals ---------- */
+const NOTES=[{ n:'도', f:523.25, col:0x8dffcf },{ n:'레', f:587.33, col:0x8ff3ff },{ n:'미', f:659.25, col:0xff9fd8 },{ n:'솔', f:783.99, col:0xc9b6ff },{ n:'라', f:880.0, col:0xffe28a }];
+const crackTex=SV.canvasTex(128,256,(c,w,h)=>{ c.clearRect(0,0,w,h); c.strokeStyle='rgba(20,10,30,.95)'; c.lineWidth=4; for (let k=0;k<5;k++){ c.beginPath(); let x=w/2+(Math.random()-.5)*30, y=Math.random()*h; c.moveTo(x,y); for (let j=0;j<6;j++){ x+=(Math.random()-.5)*40; y+=(Math.random()-.5)*50; c.lineTo(x,y); } c.stroke(); } });
+const crystals=NOTES.map((N,i)=>{
+  const a=Math.PI*(.18+.64*(i/4)); const x=-Math.cos(a)*5.4, z=-6-Math.sin(a)*3.2;
+  const g=new T.Group(); g.position.set(x,0,z);
+  const ped=new T.Mesh(new T.CylinderGeometry(.55,.75,.6,7),new T.MeshStandardMaterial({ color:0x1f1d45, flatShading:true })); ped.position.y=.3;
+  const geo=new T.OctahedronGeometry(.5,0); const mat=SV.crystalMat(N.col,.72,.45); const m=new T.Mesh(geo,mat); m.position.y=1.6;
+  const edges=SV.edges(geo,0xffffff,.55); m.add(edges);
+  const crack=new T.Mesh(new T.PlaneGeometry(.6,1.6),new T.MeshBasicMaterial({ map:crackTex, transparent:true, depthWrite:false })); crack.position.z=.21; crack.visible=false; m.add(crack);
+  const halo=new T.Sprite(SV.glow(N.col,.0)); halo.scale.setScalar(3); halo.position.y=1.6;
+  const lbl=new T.Sprite(new T.SpriteMaterial({ map:SV.canvasTex(128,64,(c,w,h)=>{ c.font='700 40px "Gowun Batang",serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillStyle='rgba(255,255,255,.85)'; c.fillText(N.n,w/2,h/2); }), transparent:true, depthWrite:false, opacity:.0 }));
+  lbl.scale.set(.7,.35,1); lbl.position.y=.95;
+  g.add(ped,m,halo,lbl); scene.add(g); g.userData={ kind:'crystal', i }; C2.interactables.push(g);
+  return { g, m, mat, edges, crack, halo, lbl, i, f:N.f, target:N.f, col:N.col, name:N.n, ring:0, broken:false };
+});
+function sizeFor(f){ return 1.55*Math.pow(523.25/f,1.25); } // bigger crystal = lower pitch
+crystals.forEach(c=>c.m.scale.set(sizeFor(c.f)*.7,sizeFor(c.f)*1.6,sizeFor(c.f)*.7));
+
+/* ---------- the singing door ---------- */
+const MELODY=[2,3,0,4]; // 미 솔 도 라
+const door=new T.Group(); door.position.set(0,0,-24); scene.add(door);
+const doorPetals=[]; const dpg=new T.OctahedronGeometry(1,0);
+for (let i=0;i<10;i++){ const side=i<5?-1:1, k=i%5; const hold=new T.Group(); hold.position.set(side*(.9+k*.95),0,0);
+  const m=new T.Mesh(dpg,SV.crystalMat(k%2?0xb9a6ff:0xe0c8ff,.5,.4)); m.scale.set(.75,4.5+ (4-k)*.9,.35); m.position.y=m.scale.y*.9; m.rotation.z=side*(.08+k*.07);
+  m.add(SV.edges(dpg,0xf3e8ff,.7)); hold.add(m); door.add(hold); doorPetals.push({ hold, side, k }); }
+const heart=new T.Group(); heart.position.set(0,3.4,.6); door.add(heart);
+const hg=new T.OctahedronGeometry(.75,0); const heartM=new T.Mesh(hg,SV.crystalMat(0xd8c8ff,.85,.5)); heartM.scale.set(1,1.6,.6); heartM.add(SV.edges(hg,0xffffff,.7));
+const eye=new T.Mesh(new T.TorusGeometry(.26,.08,12,40),new T.MeshBasicMaterial({ color:0x0c0816 })); eye.position.z=.42; heartM.add(eye);
+const eyeGlow=new T.Sprite(SV.glow(0xb58cff,.6)); eyeGlow.scale.setScalar(2.6); heart.add(heartM,eyeGlow);
+heart.userData={ kind:'gate' }; C2.interactables.push(heart);
+// melody sockets above the door: each lights with the note's colour and a bar as tall as its pitch
+const sockets=MELODY.map((ni,j)=>{ const g=new T.Group(); g.position.set(-2.4+j*1.6,7.4,.4); const d=new T.Mesh(new T.OctahedronGeometry(.3,0),SV.crystalMat(0x3a3460,.9,.1)); d.scale.y=1.5;
+  const bar=new T.Mesh(new T.PlaneGeometry(.22,1),new T.MeshBasicMaterial({ color:NOTES[ni].col, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false })); const bh=.6+ni*.42; bar.scale.y=bh; bar.position.y=-.55-bh/2;
+  const gl=new T.Sprite(SV.glow(NOTES[ni].col,0)); gl.scale.setScalar(1.8); g.add(d,bar,gl); door.add(g); return { g, d, bar, gl, ni, lit:0, done:false }; });
+// the chamber beyond: a light-waterfall and the ringed sphere (concept art 4, 7)
+const chamber=new T.Group(); chamber.position.set(0,0,-36); scene.add(chamber);
+const fall=new T.Mesh(new T.CylinderGeometry(1.4,2.6,16,32,1,true),new T.ShaderMaterial({ transparent:true, depthWrite:false, blending:T.AdditiveBlending, side:T.DoubleSide, uniforms:{ uT:{value:0}, uO:{value:0} },
+  vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  fragmentShader:`uniform float uT,uO; varying vec2 vUv; void main(){ float s=.5+.5*sin(vUv.x*60.+vUv.y*8.-uT*6.); float a=(.25+.55*s)*smoothstep(0.,.3,vUv.y)*uO; gl_FragColor=vec4(mix(vec3(.6,.85,1.),vec3(1.),s)*a,a); }` }));
+fall.position.y=8; chamber.add(fall);
+const sphere=new T.Mesh(new T.SphereGeometry(2.2,48,32),new T.MeshStandardMaterial({ color:0x9fd8ff, emissive:0x6a9cff, emissiveIntensity:.6, roughness:.3, transparent:true, opacity:0 })); sphere.position.y=7; chamber.add(sphere);
+const sRing=new T.Mesh(new T.TorusGeometry(3.6,.12,10,80),new T.MeshBasicMaterial({ color:0xff7ae0, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false })); sRing.rotation.set(1.2,.3,0); sRing.position.y=7; chamber.add(sRing);
+const chamberFloor=new T.Mesh(new T.CircleGeometry(10,48),new T.MeshStandardMaterial({ color:0x141a44, emissive:0x3a5cff, emissiveIntensity:.15 })); chamberFloor.rotation.x=-Math.PI/2; chamberFloor.position.y=.01; chamber.add(chamberFloor);
+
+/* ---------- 2D panels: pitch ladder and the beating waves ---------- */
+const pc=el('pitch'), pg=pc.getContext('2d'), wc=el('wave'), wg=wc.getContext('2d');
+const strikes=[]; // { i, t }
+const yOf=f=>{ const lo=Math.log(480), hi=Math.log(960); return pc.height-14-(Math.log(f)-lo)/(hi-lo)*(pc.height-28); };
+function drawPitch(){
+  const w=pc.width, h=pc.height; pg.clearRect(0,0,w,h);
+  NOTES.forEach((N,i)=>{ const y=yOf(N.f); pg.strokeStyle='rgba(200,190,255,.18)'; pg.lineWidth=2; pg.beginPath(); pg.moveTo(54,y); pg.lineTo(w-8,y); pg.stroke();
+    pg.fillStyle='#'+new T.Color(N.col).getHexString(); pg.font='700 22px "Gowun Batang",serif'; pg.textAlign='left'; pg.textBaseline='middle'; pg.fillText(N.n,10,y); });
+  const now=SV.t; for (let k=strikes.length-1;k>=0;k--){ const s=strikes[k], age=now-s.t; if (age>4.5){ strikes.splice(k,1); continue; }
+    const x=w-30-age*(w-90)/4.5, y=yOf(s.f), col='#'+new T.Color(s.col).getHexString(); const g=pg.createRadialGradient(x,y,0,x,y,26); g.addColorStop(0,col); g.addColorStop(1,'rgba(0,0,0,0)'); pg.globalAlpha=Math.max(0,1-age/4.5);
+    pg.fillStyle=g; pg.beginPath(); pg.arc(x,y,26,0,7); pg.fill(); pg.fillStyle='#fff'; pg.beginPath(); pg.arc(x,y,5,0,7); pg.fill(); pg.globalAlpha=1;
+    if (k>0 && now-strikes[k-1].t<4.5){ const p=strikes[k-1], px=w-30-(now-p.t)*(w-90)/4.5; pg.strokeStyle='rgba(255,255,255,.25)'; pg.beginPath(); pg.moveTo(px,yOf(p.f)); pg.lineTo(x,y); pg.stroke(); } }
+}
+function noteStrike(f,col,name){ strikes.push({ f, col, t:SV.t }); el('pitchPnl').hidden=false; el('pitchN').textContent=name+' · '+Math.round(f)+' Hz'; }
+function drawWave(fT,fC){
+  const w=wc.width, h=wc.height; wg.clearRect(0,0,w,h); const cyc=10, d=fC/fT, ph=SV.t*2.2;
+  const line=(fn,y0,amp,col,lw)=>{ wg.strokeStyle=col; wg.lineWidth=lw; wg.beginPath(); for (let x=0;x<=w;x+=2){ const u=x/w, y=y0-fn(u)*amp; x?wg.lineTo(x,y):wg.moveTo(x,y); } wg.stroke(); };
+  line(u=>Math.sin(2*Math.PI*cyc*u*1+ph),h*.16,h*.1,'rgba(143,243,255,.9)',3);
+  line(u=>Math.sin(2*Math.PI*cyc*u*d+ph*d),h*.4,h*.1,'rgba(255,159,216,.9)',3);
+  line(u=>(Math.sin(2*Math.PI*cyc*u+ph)+Math.sin(2*Math.PI*cyc*u*d+ph*d))/2,h*.76,h*.2,'rgba(255,255,255,.95)',3);
+  wg.font='600 20px "Noto Sans KR",sans-serif'; wg.fillStyle='rgba(143,243,255,.9)'; wg.fillText('문의 소리 '+Math.round(fT)+' Hz',8,22); wg.fillStyle='rgba(255,159,216,.9)'; wg.fillText('결정의 소리 '+Math.round(fC)+' Hz',8,h*.4-26);
+  wg.fillStyle='rgba(255,255,255,.85)'; wg.fillText('두 소리를 합치면',8,h*.56); }
+
+/* ---------- puzzle state ---------- */
+const S={ struck:new Set(), heard:false, tuned:false, seq:0, fails:0, open:false, openT:-1, inside:false, drones:null };
+function strike(c,power=.6){
+  const p=c.g.position.clone(); p.y=1.6;
+  if (c.broken){ SV.AU.tone(p,{ f:c.f, kind:'glass', dur:1.6, vol:.35 }); SV.AU.tone(p,{ kind:'thud', vol:.25 }); }
+  else SV.AU.tone(p,{ f:c.f, kind:'glass', dur:2.8, vol:.45+power*.2 });
+  c.ring=1; SV.wave(new T.Vector3(p.x,0,p.z),.12,{ color:c.col, maxR:5, speed:7, src:'crystal' }); SV.blip(p,'#'+new T.Color(c.col).getHexString(),1);
+  noteStrike(c.f,c.col,c.name+(c.broken?' (어긋남)':''));
+  pods.forEach(pd=>pd.gl.material.opacity=.9);
+  S.struck.add(c.i);
+  if (C2.phase==='start' && S.struck.size>=3){ C2.phase='listen'; SV.later(()=>{ SV.memory('큰 결정은 낮게, 작은 결정은 높게 울려요.<br>소리의 높이가 화면 오른쪽 아래에 빛으로 그려져요.','소리의 높낮이 · 음높이',6);
+    SV.objective('동굴 문의 심장을 두드려 문의 노래를 들어 보세요','문 가운데 결정을 클릭하거나 구슬을 던져요.'); },600); }
+  if (C2.phase==='play') checkSeq(c);
+}
+function playMelody(){
+  const p=heart.getWorldPosition(new T.Vector3());
+  MELODY.forEach((ni,j)=>{ SV.later(()=>{ const N=NOTES[ni]; SV.AU.tone(p,{ f:N.f, kind:'glass', dur:2.2, vol:.42 }); sockets[j].lit=1; noteStrike(N.f,N.col,'문의 노래 '+(j+1)+' · '+N.n); SV.blip(p,'#'+new T.Color(N.col).getHexString(),1.1); },j*700); });
+  SV.wave(new T.Vector3(0,0,-23.4),.3,{ color:0xd8c8ff, maxR:10, speed:8, src:'gate' });
+  if (!S.heard){ S.heard=true; SV.later(()=>{ C2.phase=S.tuned?'play':'tune';
+    if (!S.tuned){ SV.memory('문의 노래는 <b>미 · 솔 · 도 · 라</b>.<br>그런데 분홍 결정은 금이 가서, 미와 어긋난 소리를 내요.','공명 · Resonance',7);
+      SV.objective('금 간 분홍 결정을 문의 ‘미’에 맞춰요','결정을 바라본 채 마우스 휠을 굴려요. 두 소리의 높이가 같아지면 일렁임(맥놀이)이 사라지고 공명해요.'); }
+    else seqObjective(); },MELODY.length*700+600); }
+}
+function seqObjective(){ SV.objective('문의 노래 순서대로 결정을 두드려요 ('+S.seq+'/4)','미 → 솔 → 도 → 라 · 결정을 클릭하거나 구슬을 던져요. 문 심장을 두드리면 다시 들을 수 있어요.'); }
+function checkSeq(c){
+  const want=MELODY[S.seq];
+  if (c.i===want){ sockets[S.seq].done=true; S.seq++; SV.AU.tone(null,{ f:NOTES[want].f*2, kind:'chime', dur:1, vol:.12, delay:.15 });
+    if (S.seq>=MELODY.length) openDoor(); else seqObjective(); }
+  else { S.fails++; S.seq=0; sockets.forEach(s=>s.done=false); SV.AU.tone(heart.getWorldPosition(new T.Vector3()),{ kind:'thud', vol:.45 }); SV.shake=.15;
+    SV.memory('문이 다른 소리에는 대답하지 않아요.','',2.5); seqObjective(); if (S.fails%2===0) SV.later(playMelody,1200); }
+}
+function openDoor(){
+  S.open=true; S.openT=0; C2.phase='open';
+  const p=new T.Vector3(0,3,-23);
+  crystals.forEach((c,i)=>SV.later(()=>{ SV.AU.tone(c.g.position.clone().setY(1.6),{ f:c.f, kind:'glass', dur:4, vol:.35 }); c.ring=1; },i*120));
+  SV.AU.chord('open'); SV.AU.hearing(1); SV.AU.ambient({ pad:1, drip:.8 }); SV.shake=1.4; SV.flash(.5);
+  SV.wave(new T.Vector3(0,0,-22),1,{ color:0xffd6ff, maxR:34, speed:10, src:'gate' });
+  SV.later(()=>SV.memory('두드리면, 대답해.<br>세상은 여전히 나에게 말을 걸고 있었어.','',6.5),1800);
+  SV.later(()=>SV.objective('열린 문 너머로 들어가요',''),3500);
+}
+
+/* ---------- interaction ---------- */
+const reach={ crystal:6.8, gate:9 };
+C2.canInteract=a=>{ const k=a.obj.userData.kind; return (k==='crystal' && a.dist<reach.crystal) || (k==='gate' && a.dist<reach.gate); };
+C2.interact=a=>{ const k=a.obj.userData.kind; if (k==='crystal' && a.dist<reach.crystal) strike(crystals[a.obj.userData.i]); else if (k==='gate' && a.dist<reach.gate) playMelody(); };
+C2.prompt=a=>{
+  if (!a) return ''; const k=a.obj.userData.kind;
+  if (k==='crystal'){ const c=crystals[a.obj.userData.i]; const t=c.broken?(S.heard?'<kbd>휠</kbd> 음높이 맞추기 · ':'')+'금 간 결정':c.name+' 결정';
+    return a.dist<reach.crystal?'<kbd>클릭</kbd> 두드리기 · '+t:(c.broken&&S.heard?'<kbd>휠</kbd> 음높이 맞추기 · ':'')+t+' · 가까이 가거나 구슬을 던져요'; }
+  if (k==='gate') return a.dist<reach.gate?'<kbd>클릭</kbd> 문의 노래 듣기':'문의 심장 · 더 가까이';
+  return ''; };
+C2.onWheel=(a,dir)=>{
+  if (!a || a.obj.userData.kind!=='crystal') return; const c=crystals[a.obj.userData.i]; if (!c.broken || !S.heard) { if (!c.broken) SV.memory('이 결정은 이미 맞는 소리를 내요.','',2); return; }
+  const d=Math.abs(c.f-c.target), step=d>20?6:d>6?2:.5; c.f=clamp(c.f-dir*step,560,760); c.m.scale.set(sizeFor(c.f)*.7,sizeFor(c.f)*1.6,sizeFor(c.f)*.7);
+  if (Math.abs(c.f-c.target)<=1) heal(c);
+};
+function heal(c){
+  c.broken=false; c.f=c.target; c.crack.visible=false; c.mat.color.set(c.col); c.mat.emissive.set(c.col); S.tuned=true; stopDrones();
+  SV.AU.tone(c.g.position.clone().setY(1.6),{ f:c.f, kind:'bell', dur:4, vol:.5 }); SV.AU.tone(heart.getWorldPosition(new T.Vector3()),{ f:c.f, kind:'bell', dur:4, vol:.35, delay:.05 });
+  SV.wave(new T.Vector3(c.g.position.x,0,c.g.position.z),.5,{ color:c.col, maxR:14, speed:9, src:'crystal' }); SV.flash(.3);
+  el('waveHz').textContent='공명했어요!';
+  SV.memory('두 소리가 하나로 겹치자, 일렁임이 멈췄어요.<br>같은 높이의 소리는 서로를 울려요 — 이것이 공명이에요.','공명 · Resonance',6.5);
+  SV.later(()=>{ el('wavePnl').hidden=true; if (S.heard){ C2.phase='play'; seqObjective(); } },2600);
+}
+function startDrones(c){ if (S.drones) return; S.drones={ a:SV.AU.drone(heart.getWorldPosition(new T.Vector3()),c.target,.09), b:SV.AU.drone(c.g.position.clone().setY(1.6),c.f,.09), c }; }
+function stopDrones(){ if (!S.drones) return; S.drones.a.stop(); S.drones.b.stop(); S.drones=null; }
+C2.onImpact=(h)=>{ if (h.kind==='crystal') strike(h.c,.9); else if (h.kind==='gate') playMelody(); };
+C2.onWave=()=>{};
+C2.listenSources=()=>{ const out=[{ pos:new T.Vector3(0,3,-23.4), col:'#d8c8ff' }]; crystals.forEach(c=>{ if (c.broken) out.push({ pos:c.g.position, col:'#ff9fd8' }); }); return out; };
+C2.collide=(p)=>{
+  for (const c of crystals){ if (p.distanceTo(V.set(c.g.position.x,1.6,c.g.position.z))<.75) return { point:p.clone(), kind:'crystal', c, silent:true }; }
+  if (!S.open && p.distanceTo(heart.getWorldPosition(V))<1.3) return { point:p.clone(), kind:'gate', silent:true };
+  if (!S.open && p.z<-23.4) return { point:p.clone(), kind:'wall' };
+  for (const q of pillars){ const dx=q.x-p.x, dz=q.z-p.z; if (dx*dx+dz*dz<q.r*q.r) return { point:p.clone(), kind:'wall' }; }
+  if (Math.abs(p.x)>15) return { point:p.clone(), kind:'wall' };
+  if (p.y<=.05) return { point:new T.Vector3(p.x,0,p.z), kind:'ground' };
+  return null; };
+C2.walkable=(x,z)=>{
+  if (z>17) return false;
+  if (z<-22.6){ if (!S.open) return false; if (z>-27) return Math.abs(x)<3.6; return Math.hypot(x,z+36)<9.3; }
+  if (Math.abs(x)>12.4) return false;
+  for (const q of pillars){ const dx=q.x-x, dz=q.z-z; if (dx*dx+dz*dz<(q.r+.4)*(q.r+.4)) return false; }
+  for (const c of crystals){ if (Math.hypot(c.g.position.x-x,c.g.position.z-z)<.95) return false; }
+  return true; };
+C2.groundY=(x,z)=>Math.hypot(x,z+6)<3.6?.25:0;
+
+/* ---------- per frame ---------- */
+C2.update=(dt,t)=>{
+  const P=SV.P;
+  // spores drift down
+  const A=sg.attributes.position.array; for (let i=0;i<SN;i++){ A[i*3+1]-=dt*.35; A[i*3]+=Math.sin(t*.5+i)*dt*.05; if (A[i*3+1]<0) A[i*3+1]=16; } sg.attributes.position.needsUpdate=true;
+  mushMat.color.setHSL(.42,1,.65+.12*Math.sin(t*1.3));
+  crystals.forEach(c=>{ c.ring=Math.max(0,c.ring-dt*.8); const b=c.broken;
+    c.mat.emissiveIntensity=(b?.12+.08*Math.random():.45)+c.ring*1.2; c.halo.material.opacity=c.ring*.8+(b?0:.12); c.m.rotation.y+=dt*(.3+c.ring*2);
+    c.m.position.y=1.6+Math.sin(t*1.4+c.i)*.06+(b?(Math.random()-.5)*.02:0); c.edges.material.opacity=b?.25:.55+c.ring*.4;
+    c.lbl.material.opacity=lerp(c.lbl.material.opacity,Math.hypot(P.pos.x-c.g.position.x,P.pos.z-c.g.position.z)<6?.85:0,dt*3); });
+  pods.forEach((pd,i)=>{ pd.gl.material.opacity=lerp(pd.gl.material.opacity,.35+.1*Math.sin(t*2+i),dt*2); });
+  eyeGlow.material.opacity=.45+.25*Math.sin(t*2.2)+(S.open?.5:0); heartM.rotation.y=Math.sin(t*.7)*.25;
+  sockets.forEach(s=>{ s.lit=Math.max(0,s.lit-dt*.7); const on=Math.max(s.lit,s.done?.8:0); s.bar.material.opacity=on; s.gl.material.opacity=on*.9; s.d.material.emissive.set(on>.05?NOTES[s.ni].col:0x3a3460); s.d.material.emissiveIntensity=.2+on; });
+  // tuning: hear (and see) the two sounds beat against each other
+  const a=SV.aim, aimBroken=a && a.obj.userData.kind==='crystal' && crystals[a.obj.userData.i].broken && S.heard && a.dist<10;
+  if (aimBroken){ const c=crystals[a.obj.userData.i]; el('wavePnl').hidden=false; const df=Math.abs(c.f-c.target); el('waveHz').textContent='Δ '+df.toFixed(1)+' Hz · 일렁임 '+df.toFixed(1)+'번/초'; drawWave(c.target,c.f); startDrones(c); S.drones.b.set(c.f); }
+  else if (S.drones){ stopDrones(); if (!S.tuned) el('wavePnl').hidden=true; }
+  if (!el('pitchPnl').hidden) drawPitch();
+  // the door opens
+  if (S.openT>=0){ S.openT+=dt; const k=clamp(S.openT/3.5,0,1), e=1-Math.pow(1-k,3);
+    doorPetals.forEach(d=>{ d.hold.rotation.z=-d.side*e*(.5+d.k*.12); d.hold.position.x=d.side*(.9+d.k*.95+e*(2.5+d.k*.6)); });
+    heart.position.y=3.4+e*2.6; padBeam.material.opacity=(.12+.06*Math.sin(t*3))*e;
+    fall.material.uniforms.uO.value=e; sphere.material.opacity=e*.75; sRing.material.opacity=e*.9;
+    SV.post.uniforms.uSat.value=lerp(SV.post.uniforms.uSat.value,1.05,dt*.5); pink.intensity=1.4+e*1.5; }
+  fall.material.uniforms.uT.value=t; sphere.rotation.y+=dt*.2; sRing.rotation.z+=dt*.4;
+  if (S.open && !S.inside && P.pos.z<-27){ S.inside=true; finale(); }
+};
+function finale(){
+  P0().frozen=true; SV.AU.tone(new T.Vector3(0,7,-36),{ f:440, kind:'bell', dur:6, vol:.4 }); [659.25,783.99,523.25,880].forEach((f,i)=>SV.AU.tone(new T.Vector3(0,7,-36),{ f, kind:'glass', dur:4, vol:.3, delay:.6+i*.7 }));
+  SV.memory('처음으로, 다시 들어 보고 싶어졌어.<br>무섭더라도, 소리에 손을 내밀어 보고 싶어.','',7);
+  SV.later(()=>SV.card('CHAPTER 2 COMPLETE','소리의 높낮이','큰 결정은 낮게, 작은 결정은 높게. 같은 높이의 소리는 서로를 울려요.<br>소리와 다시 이어지려는 첫 시도였어요.',5),6000);
+  SV.later(()=>{ document.exitPointerLock&&document.exitPointerLock(); SV.playing=false; el('hud').hidden=true; el('endP').innerHTML='침묵의 숲에서 소리의 방향을 따라가 기억을 되찾았고,<br>공명의 동굴에서 소리의 높낮이를 맞춰 닫힌 문을 열었어요.<br><br>다음 이야기 — 멈춰버린 시계탑(리듬과 시간), 기억의 호수(소리와 감정), 소리의 정원(나만의 음악)이 이어질 예정이에요.'; el('end').hidden=false; },11500);
+}
+const P0=()=>SV.P;
+
+/* ---------- enter ---------- */
+C2.enter=()=>{
+  const P=SV.P; P.pos.set(0,1.62,13); P.yaw=0; P.pitch=-.04; P.frozen=false;
+  Object.assign(S,{ struck:new Set(), heard:false, tuned:false, seq:0, fails:0, open:false, openT:-1, inside:false }); stopDrones();
+  crystals.forEach(c=>{ c.f=c.target; c.broken=false; c.crack.visible=false; c.mat.color.set(c.col); c.mat.emissive.set(c.col); });
+  const b=crystals[2]; b.broken=true; b.f=601; b.crack.visible=true; b.mat.color.set(0x7a4a6a); b.mat.emissive.set(0x5a2a48); b.m.scale.set(sizeFor(b.f)*.7,sizeFor(b.f)*1.6,sizeFor(b.f)*.7);
+  sockets.forEach(s=>{ s.lit=0; s.done=false; }); doorPetals.forEach(d=>{ d.hold.rotation.z=0; d.hold.position.x=d.side*(.9+d.k*.95); }); heart.position.y=3.4;
+  fall.material.uniforms.uO.value=0; sphere.material.opacity=0; sRing.material.opacity=0; padBeam.material.opacity=0;
+  C2.phase='start'; strikes.length=0; el('pitchPnl').hidden=true; el('wavePnl').hidden=true;
+  const o=SV.orb; o.state='held'; o.mesh.visible=true; o.mesh.userData.kind='orb';
+  SV.pips(0,0); SV.chapterLabel('Chapter 2','공명의 동굴 — 소리의 높낮이');
+  SV.post.uniforms.uSat.value=.55; SV.AU.chord('cave'); SV.AU.hearing(.62,.1); SV.AU.ambient({ wind:.2, drip:.7, birds:0, pad:.35 },.1);
+  SV.card('CHAPTER 2','공명의 동굴','소리의 높낮이 — 결정이 서로 다른 높이로 울리는 동굴',4.5);
+  SV.later(()=>SV.objective('빛나는 크리스털을 두드려 보세요','가운데 둥근 판 위로 가서 결정을 클릭해요. 멀리서는 구슬을 던져도 울려요.'),1200);
+};
+C2.exit=()=>{ stopDrones(); el('pitchPnl').hidden=true; el('wavePnl').hidden=true; };
+SV.C2=C2;
+})();
+</script>
+<script>
+(function(){
+'use strict';
+const el=id=>document.getElementById(id), P=SV.P;
+/* timers belong to one run of a chapter; restarting cancels the old ones */
+SV.gen=0;
+SV.later=(fn,ms)=>{ const g=SV.gen; return setTimeout(()=>{ if (g===SV.gen) fn(); },ms); };
+const _set=SV.setChapter; SV.setChapter=C=>{ SV.gen++; _set(C); };
+/* quiet mode: the title backdrop runs a chapter without its cards */
+['card','objective','memory'].forEach(k=>{ const f=SV[k]; SV[k]=(...a)=>{ if (!SV.quiet) f(...a); }; });
+
+SV.goChapter=n=>{
+  SV.quiet=false; el('end').hidden=true; el('title').hidden=true; el('hud').hidden=false;
+  P.keys={}; P.listen=false; P.frozen=false; SV.playing=true;
+  SV.setChapter(n===2?SV.C2:SV.C1);
+  try{ history.replaceState(null,'','#ch'+n); }catch(_){}
+};
+function begin(n){
+  SV.AU.init(); if (SV.AU.ctx && SV.AU.ctx.state!=='running') SV.AU.ctx.resume();
+  attract=false;
+  SV.fadeTo(()=>{ SV.goChapter(n); lock(); },.9);
+}
+function lock(){ if (P.noLock) return; try{ const r=el('gl').requestPointerLock(); if (r&&r.catch) r.catch(()=>{ P.noLock=true; el('lockhint').hidden=true; }); }catch(_){ P.noLock=true; } }
+el('startBtn').onclick=()=>begin(1);
+el('ch2Btn').onclick=()=>begin(2);
+el('againBtn').onclick=()=>begin(1);
+el('ch2AgainBtn').onclick=()=>begin(2);
+
+/* title backdrop: the silent forest, slowly turning */
+let attract=true;
+SV.quiet=true; SV.playing=false; SV.setChapter(SV.C1); SV.quiet=true;
+P.pos.set(2,1.7,8); P.yaw=.25; P.pitch=.02;
+(function spin(){ if (attract){ P.yaw-=.00045; P.pitch=.02+Math.sin(performance.now()/5200)*.04; } requestAnimationFrame(spin); })();
+SV.loop();
+
+/* deep link: #ch2 skips the title button choice but still needs a click for audio */
+if (/ch2/.test(location.hash)) el('ch2Btn').classList.add('main');
+addEventListener('keydown',e=>{ if (e.code==='Escape' && SV.playing) el('lockhint').hidden=P.noLock; });
+})();
+</script>
+</body></html>
