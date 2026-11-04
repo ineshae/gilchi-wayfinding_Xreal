@@ -65,6 +65,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .tbox{max-width:760px;text-align:center}
 .logo{font:600 clamp(30px,5.8vw,80px)/1 var(--latin);letter-spacing:.11em;margin:0 -.11em 0 0;white-space:nowrap;max-width:100%;background:linear-gradient(180deg,#fff,#cdbfff 60%,#8ff3ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 30px rgba(170,150,255,.45))}
 .logo .colon{display:inline-block;margin:0 .02em;background:linear-gradient(180deg,#ff9fd8,#8ff3ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.homelink{position:fixed;left:max(18px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));padding:8px 14px;border-radius:999px;border:1px solid var(--edge-2);background:rgba(255,255,255,.05);color:var(--ink);text-decoration:none;font:700 13px/1 var(--body)}
+.homelink:hover{background:rgba(255,255,255,.12)}
 .logo-sub{font:700 clamp(17px,2.4vw,22px)/1.4 var(--serif);margin:12px 0 0;color:var(--ink)}
 .genre{font:italic 500 15px/1 var(--latin);letter-spacing:.2em;color:var(--muted);margin-top:10px}
 .story{font:400 15.5px/1.95 var(--serif);color:#d9dcf5;margin:26px auto 0;max-width:600px}
@@ -168,6 +170,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 <div class="flash" id="flash"></div>
 
 <div class="ov title" id="title">
+  <a class="homelink" href="./">← 처음 화면</a>
   <div class="tbox">
     <h1 class="logo" aria-label="SOUNDRE:VERSE">SOUNDRE<span class="colon">:</span>VERSE</h1>
     <p class="logo-sub">잃어버린 소리의 세계</p>
