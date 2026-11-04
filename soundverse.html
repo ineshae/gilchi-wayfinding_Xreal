@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SOUNDVERSE</title>
-<meta name="description" content="SOUNDVERSE — 잃어버린 소리의 세계. 심인성 난청을 겪는 주인공이 소리를 직접 만들고 조작하며 세계를 되살리는 VR 어드벤처 프로토타입 (Chapter 1 침묵의 숲 · Chapter 2 공명의 동굴 · Final 소리의 정원)">
+<title>SOUNDRE:VERSE</title>
+<meta name="description" content="SOUNDRE:VERSE — 잃어버린 소리의 세계. 심인성 난청을 겪는 주인공이 소리를 직접 만들고 조작하며 세계를 되살리는 VR 어드벤처 프로토타입 (Chapter 1 침묵의 숲 · Chapter 2 공명의 동굴 · Final 소리의 정원)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
@@ -63,7 +63,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ov{position:fixed;inset:0;display:grid;place-items:center;padding:24px;overflow:auto;-webkit-user-select:text;user-select:text}
 .title{background:radial-gradient(900px 600px at 50% 40%,rgba(120,100,255,.18),transparent 70%),radial-gradient(700px 500px at 70% 80%,rgba(255,120,200,.10),transparent 70%),rgba(4,4,10,.72)}
 .tbox{max-width:760px;text-align:center}
-.logo{font:600 clamp(38px,7.2vw,92px)/1 var(--latin);letter-spacing:.14em;margin:0 -.14em 0 0;white-space:nowrap;max-width:100%;background:linear-gradient(180deg,#fff,#cdbfff 60%,#8ff3ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 30px rgba(170,150,255,.45))}
+.logo{font:600 clamp(30px,5.8vw,80px)/1 var(--latin);letter-spacing:.11em;margin:0 -.11em 0 0;white-space:nowrap;max-width:100%;background:linear-gradient(180deg,#fff,#cdbfff 60%,#8ff3ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 30px rgba(170,150,255,.45))}
+.logo .colon{display:inline-block;margin:0 .02em;background:linear-gradient(180deg,#ff9fd8,#8ff3ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .logo-sub{font:700 clamp(17px,2.4vw,22px)/1.4 var(--serif);margin:12px 0 0;color:var(--ink)}
 .genre{font:italic 500 15px/1 var(--latin);letter-spacing:.2em;color:var(--muted);margin-top:10px}
 .story{font:400 15.5px/1.95 var(--serif);color:#d9dcf5;margin:26px auto 0;max-width:600px}
@@ -140,7 +141,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 </style>
 </head>
 <body>
-<canvas id="gl" aria-label="SOUNDVERSE 3D 화면"></canvas>
+<canvas id="gl" aria-label="SOUNDRE:VERSE 3D 화면"></canvas>
 <div class="vig"></div>
 <div class="speed" id="speed"></div>
 
@@ -168,7 +169,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 <div class="ov title" id="title">
   <div class="tbox">
-    <h1 class="logo">SOUNDVERSE</h1>
+    <h1 class="logo" aria-label="SOUNDRE:VERSE">SOUNDRE<span class="colon">:</span>VERSE</h1>
     <p class="logo-sub">잃어버린 소리의 세계</p>
     <div class="genre">VR Adventure · Puzzle · Music Interaction</div>
     <p class="story">그날 이후로, 세상의 소리가 멀어졌어요.<br>
@@ -1494,7 +1495,7 @@ function drawMix(){
 C5.update=(dt,t)=>{
   const P=SV.P;
   S.restore=lerp(S.restore,S.restoreT,Math.min(1,dt*(S.done?.35:.8))); const k=S.restore;
-  SV.post.uniforms.uSat.value=.06+k*1.02; SV.post.uniforms.uGlow.value=.32+.5*k; SV.post.uniforms.uTint.value.setScalar(.7+.3*k);
+  SV.post.uniforms.uSat.value=.5+k*.6; SV.post.uniforms.uGlow.value=.38+.45*k; SV.post.uniforms.uTint.value.setScalar(.84+.16*k);
   S.flow+=dt*(.04+k*1.0);
   skyMat.uniforms.uT.value=t; skyMat.uniforms.uK.value=k; cloudMat.uniforms.uF.value=S.flow*.12; cloudMat.uniforms.uK.value=k;
   fallMat.uniforms.uF.value=S.flow*.9; fallMat.uniforms.uK.value=k; sphMat.uniforms.uF.value=S.flow; sphMat.uniforms.uK.value=k;
@@ -1550,7 +1551,7 @@ C5.enter=()=>{
   SV.orb.state='none'; SV.orb.mesh.visible=false;
   SV.chapterLabel('Final Chapter','소리의 정원 — 나만의 음악'); SV.pips(0,5); el('mixN').textContent='0 / 5'; el('mixPnl').hidden=false;
   el('keys').innerHTML='<kbd>W A S D</kbd> 날기 · <kbd>마우스</kbd> 방향 · <kbd>Space</kbd> 위로 · <kbd>C</kbd> 아래로<br><kbd>Shift</kbd> 빠르게 날기 · <kbd>1</kbd>~<kbd>5</kbd>/<kbd>휠</kbd> 조각 고르기<br><kbd>클릭</kbd> 놓기 · 다시 집기 · <kbd>Tab</kbd> 기억의 조각 · <kbd>우클릭</kbd> 소리의 자리';
-  SV.post.uniforms.uSat.value=.06; SV.AU.hearing(.55,.1); SV.AU.ambient({ wind:.35, drip:0, birds:0, pad:0 },.1);
+  SV.post.uniforms.uSat.value=.5; SV.AU.hearing(.55,.1); SV.AU.ambient({ wind:.35, drip:0, birds:0, pad:0 },.1);
   INV.render();
   SV.card('FINAL CHAPTER','소리의 정원','나만의 음악 — 하늘 위, 모든 것이 멈춰 있는 정원',4.5);
   SV.objective('노래를 불러오는 중…','');
