@@ -62,6 +62,20 @@ button{font:inherit;color:inherit;cursor:pointer}
 .backbtn{position:absolute;left:max(18px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));pointer-events:auto;padding:8px 14px;border-radius:999px;border:1px solid var(--edge-2);background:rgba(10,10,24,.62);color:var(--ink);font:700 13px/1 var(--body);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:background .2s}
 .backbtn:hover{background:rgba(60,50,110,.75)}
 .hud .obj{top:calc(max(16px,env(safe-area-inset-top)) + 44px)}
+.ai{width:340px;pointer-events:auto}
+.ai-hd{display:flex;align-items:center;gap:10px}
+#aiAv{width:52px;height:52px;flex:none}
+.ai-hd b{display:block;font:700 16px/1.2 var(--serif)}
+.ai-hd small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.ai-st{margin-left:auto;padding:4px 9px;border-radius:999px;border:1px solid var(--edge-2);font:700 11px/1 var(--body);color:var(--cyan)}
+#aiWave{width:100%;height:30px;display:block;margin:6px 0 2px}
+.ai-say{min-height:46px;font:400 15px/1.6 var(--serif);color:#fff}
+.ai-me{min-height:18px;margin-top:4px;font-size:12.5px;color:var(--mint)}
+.ai-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.aichip{padding:6px 10px;border-radius:999px;border:1px solid var(--edge-2);background:rgba(255,255,255,.05);font:500 12.5px/1.2 var(--body)}
+.aichip:hover{background:rgba(255,255,255,.12)}
+.aichip kbd,.ai-ft kbd{font:700 10.5px/1 var(--body);padding:2px 5px;border-radius:4px;border:1px solid var(--edge-2)}
+.ai-ft{display:flex;gap:10px;flex-wrap:wrap;margin-top:9px;font-size:11.5px;color:var(--muted)}
 /* ---------- overlays ---------- */
 .ov{position:fixed;inset:0;display:grid;place-items:center;padding:24px;overflow:auto;-webkit-user-select:text;user-select:text}
 .title{background:radial-gradient(900px 600px at 50% 40%,rgba(120,100,255,.18),transparent 70%),radial-gradient(700px 500px at 70% 80%,rgba(255,120,200,.10),transparent 70%),rgba(4,4,10,.72)}
@@ -161,6 +175,14 @@ button{font:inherit;color:inherit;cursor:pointer}
   <canvas id="compass" width="520" height="172" aria-label="소리 나침반: 소리가 들린 방향이 빛으로 표시돼요"></canvas>
   <div class="keys" id="keys"><kbd>W A S D</kbd> 걷기 · <kbd>마우스</kbd> 둘러보기<br><kbd>클릭</kbd> 잡기 · 두드리기 · <kbd>꾹 눌렀다 떼기</kbd> 던지기<br><kbd>우클릭</kbd>/<kbd>Q</kbd> 귀 기울이기 · <kbd>휠</kbd> 음높이 · <kbd>Esc</kbd> 마우스 풀기</div>
   <div class="side">
+    <div class="pnl ai" id="aiPnl" hidden>
+      <div class="ai-hd"><canvas id="aiAv" width="112" height="112" aria-hidden="true"></canvas><div><b>메아리</b><small>AI 동반자 · 프로토타입</small></div><span class="ai-st" id="aiState">곁에 있어요</span></div>
+      <canvas id="aiWave" width="660" height="70" aria-hidden="true"></canvas>
+      <div class="ai-say" id="aiSay" aria-live="polite"></div>
+      <div class="ai-me" id="aiMe"></div>
+      <div class="ai-chips" id="aiChips"></div>
+      <div class="ai-ft"><span><kbd>T</kbd> 말 걸기</span><span><kbd>1</kbd>~<kbd>3</kbd> 빠른 대답</span><span id="aiVoice">V 음성 끄기</span></div>
+    </div>
     <div class="pnl" id="wavePnl" hidden><div class="lb">공명 맞추기 <b id="waveHz"></b></div><canvas id="wave" width="600" height="240"></canvas></div>
     <div class="pnl" id="mixPnl" hidden><div class="lb">음악의 구성 · 소리의 조화 <b id="mixN"></b></div><canvas id="mix" width="660" height="472"></canvas></div>
     <div class="pnl" id="pitchPnl" hidden><div class="lb">음높이 <b id="pitchN"></b></div><canvas id="pitch" width="600" height="192"></canvas></div>
@@ -830,7 +852,7 @@ function answer(e,strength){
   SV.wave(p,.15,{ color:e.col, maxR:7, speed:7, src:'echo' }); SV.blip(p,'#'+new T.Color(e.col).getHexString(),1.2);
 }
 function collect(e){
-  e.got=true; C1.found++; SV.pips(C1.found,3);
+  e.got=true; C1.found++; SV.pips(C1.found,3); SV.AI.event('found',C1.found);
   const p=e.g.position.clone(); p.y=1.7;
   SV.AU.tone(p,{ f:e.note, kind:'bell', dur:4, vol:.45 }); SV.AU.tone(null,{ f:e.note*2, kind:'chime', dur:3, vol:.18, delay:.3 });
   SV.wave(p,1,{ color:e.col, maxR:30, speed:14, src:'memory' }); SV.flash(.35);
@@ -838,7 +860,7 @@ function collect(e){
   setRestore(C1.found/3);
   e.flying=0;
   if (C1.found<3) SV.objective('대답하는 소리를 따라 기억의 결정을 찾아요 ('+C1.found+'/3)','구슬을 던지면 빛의 물결이 퍼져요. 물결이 닿은 결정이 그 자리에서 대답해요. 우클릭(Q)으로 소리의 방향을 볼 수 있어요.');
-  else { C1.phase='lake'; SV.later(()=>{ SV.objective('호수 건너 크리스털 꽃이 부르고 있어요','호수에 구슬을 던지면 물결이 숨겨진 징검다리를 비춰요. 빛나는 돌만 밟을 수 있어요.'); callFlower(); },3500); }
+  else { C1.phase='lake'; SV.AI.event('lake'); SV.later(()=>{ SV.objective('호수 건너 크리스털 꽃이 부르고 있어요','호수에 구슬을 던지면 물결이 숨겨진 징검다리를 비춰요. 빛나는 돌만 밟을 수 있어요.'); callFlower(); },3500); }
 }
 let flowerPing=0;
 function callFlower(){ const p=new T.Vector3(ISLAND.x,4,ISLAND.z); [523.25,659.25,783.99].forEach((f,i)=>SV.AU.tone(p,{ f, kind:'chime', dur:3.5, vol:.3, delay:i*.25 })); SV.wave(p,.6,{ color:0xd8c8ff, maxR:16, speed:8, src:'flower' }); SV.blip(p,'#d8c8ff',1.4); }
@@ -847,6 +869,7 @@ function callFlower(){ const p=new T.Vector3(ISLAND.x,4,ISLAND.z); [523.25,659.2
 /* where the orb's hum grows strong: the sleeping/answering memory crystals (and the flower once they are found) */
 C1.orbRange=24;
 C1.orbTargets=()=>{ const L=echoes.filter(e=>!e.got).map(e=>e.g.position.clone().setY(1.7)); if (C1.found>=3) L.push(new T.Vector3(ISLAND.x,4,ISLAND.z)); return L; };
+C1.hintTarget=()=>{ let best=null, bd=1e9; echoes.forEach(e=>{ if (e.got) return; const d=e.g.position.distanceTo(SV.P.pos); if (d<bd){ bd=d; best={ pos:e.g.position.clone().setY(1.7), col:'#'+new T.Color(e.col).getHexString(), awake:e.awake }; } }); return best; };
 C1.canInteract=a=>{ const k=a.obj.userData.kind; if (k==='orbIdle') return true; if (k==='echo'){ const e=echoes[a.obj.userData.k]; return a.dist<3.6 && e.awake && !e.got; } return false; };
 C1.interact=a=>{ const k=a.obj.userData.kind;
   if (k==='orbIdle' && a.dist<9){ pickOrb(); return; }
@@ -862,7 +885,7 @@ C1.prompt=a=>{
 function pickOrb(){ SV.orb.state='return'; SV.orb.mesh.userData.kind='orb'; C1.interactables=C1.interactables.filter(o=>o!==SV.orb.mesh); C1.phase='throw1';
   SV.AU.tone(null,{ f:523.25, kind:'soft', dur:1.4, vol:.3 }); SV.AU.tone(null,{ f:783.99, kind:'soft', dur:1.6, vol:.2, delay:.15 });
   SV.memory('손끝에 따뜻한 진동이 느껴져요.<br>들리지 않는데도, 이건 분명 소리예요.','소리 구슬 · Sound Orb',5);
-  SV.objective('구슬을 꾹 눌렀다 떼서 던져 보세요','오래 누를수록 멀리 날아가고, 물결도 크게 퍼져요.'); }
+  SV.objective('구슬을 꾹 눌렀다 떼서 던져 보세요','오래 누를수록 멀리 날아가고, 물결도 크게 퍼져요.'); SV.later(()=>SV.AI.event('wake'),3400); }
 C1.onThrow=()=>{};
 C1.onImpact=(h,power)=>{
   if (C1.phase==='throw1'){ C1.phase='find'; SV.later(()=>{ SV.memory('소리가 빛의 물결이 되어 퍼져요.<br>물결이 닿은 곳에서… 무언가 대답했어요.','',5); SV.objective('대답하는 소리를 따라 기억의 결정을 찾아요 (0/3)','물결이 닿은 결정이 그 자리에서 대답해요. 화면 아래 소리 나침반과 우클릭(Q)으로 방향을 볼 수 있어요.'); },700); }
@@ -878,6 +901,7 @@ C1.listenSources=()=>{ const out=[]; echoes.forEach(e=>{ if (e.awake && !e.got) 
 
 /* ---------- per frame ---------- */
 C1.update=(dt,t)=>{
+  SV.AI.update(dt,t);
   // standing on a glowing stone, your footstep ripples and lights the next stones: no dead ends on the lake
   if (C1.phase==='lake'){ const P=SV.P; stones.forEach((s,i)=>{ if (!s.seen || Math.hypot(s.pos.x-P.pos.x,s.pos.z-P.pos.z)>1.3) return;
     [i+1,i+2].forEach(j=>{ const n=stones[j]; if (n && !n.seen){ n.seen=true; n.lit=1; C1.ripple&&C1.ripple(n.pos,.4); SV.AU.tone(new T.Vector3(n.pos.x,.3,n.pos.z),{ f:880+j*30, kind:'chime', dur:1.4, vol:.12 }); SV.blip(new T.Vector3(n.pos.x,.2,n.pos.z),'#9fe7ff',.6); } }); }); }
@@ -919,6 +943,7 @@ C1.update=(dt,t)=>{
   sky.rotation.y+=dt*.003*mo;
 };
 function startBloom(){
+  SV.AI.event('bloom');
   if (bloomT>=0) return; bloomT=0; C1.phase='bloom'; SV.P.frozen=true;
   const p=new T.Vector3(ISLAND.x,4,ISLAND.z);
   SV.AU.chord('open'); SV.AU.ambient({ pad:1, birds:1 });
@@ -938,14 +963,169 @@ C1.enter=()=>{
   petals.forEach(p=>p.tilt.rotation.x=-.12); beams.forEach(l=>l.material.opacity=0);
   reveal.forEach(r=>{ r.lit=0; r.seen=false; });
   const o=SV.orb; o.state='idle'; o.home=orbHome; o.mesh.visible=true; o.mesh.userData.kind='orbIdle'; C1.interactables=C1.interactables.filter(x=>x!==o.mesh); C1.interactables.push(o.mesh);
-  SV.pips(0,3); SV.chapterLabel('Chapter 1','침묵의 숲 — 소리의 방향');
+  SV.pips(0,3); SV.chapterLabel('Chapter 1','침묵의 숲 — 소리의 방향'); SV.AI.reset(scene);
   SV.post.uniforms.uSat.value=0; SV.AU.chord('forest'); SV.AU.hearing(0,.1); SV.AU.ambient({ wind:0, drip:0, birds:0, pad:0 },.1);
   SV.card('CHAPTER 1','침묵의 숲','소리의 방향 — 아무 소리도, 아무 움직임도 없는 숲',4.5);
   SV.later(()=>SV.objective('희미하게 빛나는 입자를 찾아 잡아 보세요','가운데 점을 입자에 맞추고 클릭해요.'),1200);
 };
-C1.exit=()=>{ SV.P.frozen=false; };
+C1.exit=()=>{ SV.P.frozen=false; SV.AI.stop(); };
 C1._stones=()=>stones.map(s=>s.seen?1:0).join(""); C1._seeAll=()=>stones.forEach(s=>s.seen=true);
 SV.C1=C1;
+})();
+</script>
+<script>
+/* =====================================================================
+   SOUNDRE:VERSE · AI companion "메아리" (prototype / show-only)
+   A small spirit made of light rings that follows you in Chapter 1.
+   It speaks (browser text-to-speech + subtitles + visible voice waves,
+   because in this world sound is seen), and you can talk back by voice
+   (T: browser speech recognition, Korean) or with quick replies (1·2·3).
+   Replies are scripted with simple keyword matching — no server, no LLM.
+   ===================================================================== */
+(function(){
+'use strict';
+const T=THREE, el=id=>document.getElementById(id);
+const lerp=(a,b,k)=>a+(b-a)*k;
+const AI=SV.AI={ awake:false, speaking:false, listening:false, voiceOn:true, q:[], lastProgress:0, hinted:0, scene:null };
+const NAME='메아리';
+
+/* ---------- the 3D spirit ---------- */
+const body=new T.Group();
+const core=new T.Mesh(new T.SphereGeometry(.2,24,16),new T.MeshBasicMaterial({ color:0xffffff }));
+const shell=new T.Mesh(new T.SphereGeometry(.32,24,16),new T.MeshBasicMaterial({ color:0xbfe9ff, transparent:true, opacity:.28, blending:T.AdditiveBlending, depthWrite:false }));
+const halo=new T.Sprite(SV.glow(0x9fe7ff,.6)); halo.scale.setScalar(1.2);
+const eyeTex=SV.canvasTex(64,32,(c,w,h)=>{ c.fillStyle='#1b2450'; [w*.3,w*.7].forEach(x=>{ c.beginPath(); c.ellipse(x,h*.5,w*.08,h*.26,0,0,7); c.fill(); }); });
+const eyes=new T.Mesh(new T.PlaneGeometry(.22,.11),new T.MeshBasicMaterial({ map:eyeTex, transparent:true, depthWrite:false })); eyes.position.z=.205;
+const ringMat=c=>new T.MeshBasicMaterial({ color:c, transparent:true, opacity:.85, blending:T.AdditiveBlending, depthWrite:false, side:T.DoubleSide });
+const r1=new T.Mesh(new T.TorusGeometry(.42,.012,6,64),ringMat(0xff9fd8)); r1.rotation.x=1.2;
+const r2=new T.Mesh(new T.TorusGeometry(.5,.01,6,64),ringMat(0x8ff3ff)); r2.rotation.set(.4,1,0);
+body.add(halo,shell,core,eyes,r1,r2); body.visible=false; body.scale.setScalar(.55);
+// voice waves: rings that leave the spirit while it talks
+const vw=[]; const vwGeo=new T.RingGeometry(.9,1,48);
+for (let i=0;i<6;i++){ const m=new T.Mesh(vwGeo,ringMat(0xbfe9ff)); m.material.opacity=0; m.visible=false; vw.push({ m, t:1 }); }
+let vwI=0, vwT=0;
+const pos=new T.Vector3(), V=new T.Vector3();
+
+/* ---------- 2D: the talk panel ---------- */
+const av=el('aiAv'), ag=av.getContext('2d');
+function drawAvatar(t){
+  const w=av.width, h=av.height; ag.clearRect(0,0,w,h); const cx=w/2, cy=h/2;
+  const g=ag.createRadialGradient(cx,cy,2,cx,cy,w*.48); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(.35,'rgba(170,230,255,.75)'); g.addColorStop(1,'rgba(120,140,255,0)'); ag.fillStyle=g; ag.beginPath(); ag.arc(cx,cy,w*.48,0,7); ag.fill();
+  ag.fillStyle='#1b2450'; [-1,1].forEach(s=>{ ag.beginPath(); ag.ellipse(cx+s*w*.11,cy-2,w*.035,h*(AI.blink?0.008:.07),0,0,7); ag.fill(); });
+  if (AI.speaking){ ag.strokeStyle='rgba(255,255,255,.95)'; ag.lineWidth=3; ag.beginPath(); for (let x=-w*.14;x<=w*.14;x+=2){ const y=cy+h*.15+Math.sin(x*.4+t*22)*h*.035*AI.env; x===-w*.14?ag.moveTo(cx+x,y):ag.lineTo(cx+x,y); } ag.stroke(); }
+  else { ag.strokeStyle='#1b2450'; ag.lineWidth=3; ag.beginPath(); ag.arc(cx,cy+h*.1,w*.05,.3,Math.PI-.3); ag.stroke(); }
+  ['rgba(255,159,216,.9)','rgba(143,243,255,.9)'].forEach((c,i)=>{ ag.strokeStyle=c; ag.lineWidth=2; ag.beginPath(); ag.ellipse(cx,cy,w*(.42+i*.04),h*(.14+i*.05),t*(i?-.6:.8),0,7); ag.stroke(); });
+}
+const wv=el('aiWave'), wg=wv.getContext('2d');
+function drawWave(t){
+  const w=wv.width, h=wv.height; wg.clearRect(0,0,w,h);
+  const k=AI.speaking?AI.env:(AI.listening?.25+.25*Math.sin(t*9):.04);
+  wg.strokeStyle=AI.listening?'#8dffcf':'#bfe9ff'; wg.lineWidth=3; wg.beginPath();
+  for (let x=0;x<=w;x+=3){ const e=Math.sin(x/w*Math.PI); const y=h/2+Math.sin(x*.07+t*14)*Math.sin(x*.013+t*3)*h*.42*k*e; x?wg.lineTo(x,y):wg.moveTo(x,y); } wg.stroke();
+}
+function setStatus(s){ el('aiState').textContent=s; }
+function showSay(text,me){ el('aiSay').innerHTML=text; if (me!=null) el('aiMe').textContent=me?('나: '+me):''; }
+function chips(list){ AI.chips=list||null; const box=el('aiChips'); box.innerHTML=''; (list||[]).forEach((c,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='aichip'; b.innerHTML='<kbd>'+(i+1)+'</kbd> '+c.label; b.onclick=()=>pick(i); box.appendChild(b); }); }
+
+/* ---------- speaking: subtitles + TTS + visible voice ---------- */
+const synth=window.speechSynthesis||null; let koVoice=null;
+function findVoice(){ if (!synth) return; const vs=synth.getVoices(); koVoice=vs.find(v=>/^ko/i.test(v.lang)&&/google/i.test(v.name))||vs.find(v=>/^ko/i.test(v.lang))||null; }
+if (synth){ findVoice(); synth.onvoiceschanged=findVoice; }
+const plain=s=>s.replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'');
+function speakNow(line,done,tok){
+  AI.speaking=true; AI.env=0; setStatus('말하는 중'); showSay(line);
+  const dur=Math.max(2200,plain(line).length*120);
+  let finished=false; const end=()=>{ if (finished) return; finished=true; if (tok!==undefined && tok!==AI.tok) return; AI.speaking=false; setStatus(AI.listening?'듣는 중':'곁에 있어요'); done&&done(); };
+  if (synth && AI.voiceOn && (koVoice || synth.getVoices().length===0)){ try{ synth.cancel(); const u=new SpeechSynthesisUtterance(plain(line)); u.lang='ko-KR'; if (koVoice) u.voice=koVoice; u.rate=1.02; u.pitch=1.35; u.volume=.95; u.onend=()=>setTimeout(end,250); synth.speak(u); }catch(_){} }
+  setTimeout(end,dur+1800); // never wait forever for the voice
+}
+AI.say=function(lines,then){ AI.q.push({ lines:[].concat(lines), then }); if (!AI.busy) next(); };
+AI.tok=0;
+function next(){ const it=AI.q.shift(); if (!it){ AI.busy=false; return; } AI.busy=true; let i=0; const tok=AI.tok;
+  const step=()=>{ if (tok!==AI.tok) return; if (i>=it.lines.length){ it.then&&it.then(); next(); return; } speakNow(it.lines[i++],()=>setTimeout(step,350),tok); }; step(); }
+AI.hush=function(){ AI.tok++; AI.q.length=0; AI.busy=false; AI.speaking=false; if (synth) try{ synth.cancel(); }catch(_){} };
+
+/* ---------- listening: T = speak (browser speech recognition), 1·2·3 = quick replies ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition; let rec=null;
+function listen(){
+  if (!AI.awake || AI.listening) return;
+  if (!SR){ AI.say('이 브라우저에서는 목소리를 받아 적을 수 없어. 대신 1·2·3으로 골라 줘.'); return; }
+  AI.hush(); AI.listening=true; setStatus('듣는 중'); showSay('<span style="color:var(--mint)">듣고 있어… 천천히 말해 줘.</span>','…');
+  try{ rec=new SR(); rec.lang='ko-KR'; rec.interimResults=true; rec.maxAlternatives=1; let final='';
+    rec.onresult=e=>{ let s=''; for (let i=0;i<e.results.length;i++){ s+=e.results[i][0].transcript; if (e.results[i].isFinal) final=s; } el('aiMe').textContent='나: '+s; };
+    rec.onerror=e=>{ AI.listening=false; setStatus('곁에 있어요'); AI.say(e.error==='not-allowed'||e.error==='service-not-allowed'?'마이크를 쓸 수 없어. 대신 1·2·3으로 골라 줘.':'잘 못 알아들었어. 한 번만 더 말해 줄래? (T)'); };
+    rec.onend=()=>{ if (!AI.listening) return; AI.listening=false; const s=final||el('aiMe').textContent.replace(/^나:\s*/,''); if (s && s!=='…') reply(s); else { setStatus('곁에 있어요'); AI.say('아무 소리도 안 보였어. 다시 말해 줄래? (T)'); } };
+    rec.start(); }catch(_){ AI.listening=false; AI.say('목소리를 받아 적을 수 없어. 대신 1·2·3으로 골라 줘.'); }
+}
+function pick(i){ const c=AI.chips&&AI.chips[i]; if (!c) return; el('aiMe').textContent='나: '+c.label; reply(c.say||c.label); }
+addEventListener('keydown',e=>{
+  if (!SV.playing || !AI.awake || SV.chapter!==SV.C1) return;
+  if (e.code==='KeyT' && !e.repeat){ e.preventDefault(); listen(); }
+  else if (e.code==='KeyV' && !e.repeat){ AI.voiceOn=!AI.voiceOn; if (!AI.voiceOn) synth&&synth.cancel(); el('aiVoice').textContent=AI.voiceOn?'V 음성 끄기':'V 음성 켜기'; }
+  else { const m=/^Digit([1-3])$/.exec(e.code); if (m) pick(+m[1]-1); }
+});
+
+/* ---------- what 메아리 says back: keywords + where you are in the chapter ---------- */
+function dirTo(p){ const P=SV.P, dx=p.x-P.pos.x, dz=p.z-P.pos.z, d=Math.hypot(dx,dz); let a=Math.atan2(dx,-dz)+P.yaw; a=Math.atan2(Math.sin(a),Math.cos(a));
+  const side=Math.abs(a)<.6?'바로 앞쪽':Math.abs(a)>2.4?'등 뒤쪽':a>0?(Math.abs(a)<1.6?'오른쪽 앞':'오른쪽 뒤'):(Math.abs(a)<1.6?'왼쪽 앞':'왼쪽 뒤'); return { side, far:d>22?'꽤 멀리':d>10?'조금 떨어진 곳':'아주 가까이', d }; }
+function hint(){
+  const C=SV.C1, t=C.hintTarget&&C.hintTarget();
+  if (C.phase==='start') return '저기 희미하게 빛나는 입자 보여? 가운데 점을 맞추고 잡아 봐.';
+  if (C.phase==='throw1') return '구슬을 꾹 눌렀다가 떼 봐. 오래 누를수록 멀리 날아가.';
+  if (C.phase==='lake') return '호수에 구슬을 던져 봐. 물결이 닿으면 숨은 돌이 빛나. 빛나는 돌만 밟을 수 있어.';
+  if (t){ const d=dirTo(t.pos); SV.blip(t.pos,t.col,1.4); return (t.awake?'대답하는 결정이 ':'잠든 결정이 ')+d.side+', '+d.far+'에 있어. '+(t.awake?'그쪽으로 가서 품어 줘.':'그쪽으로 구슬을 던져서 깨워 봐.'); }
+  return '조금만 더 둘러보자. 소리는 퍼져 나가니까, 방향을 따라가면 닿을 수 있어.';
+}
+const INTENTS=[
+  [/누구|이름|정체|너는|넌/, ()=>['나는 메아리. 네가 잃어버린 소리들이 머물던 곳에서 왔어.','네 목소리가 처음 울렸을 때 생겨났어. 그러니까… 조금은 너의 일부야.']],
+  [/어디|여기|무슨 곳|장소/, ()=>['여긴 침묵의 숲. 소리가 사라지면서 색도, 움직임도 멈춰 버린 곳이야.','하지만 사라진 건 아니야. 숨어 있을 뿐이야.']],
+  [/무서|두려|겁|불안|싫어/, ()=>['무서운 게 당연해. 소리가 멀어지면 세상도 멀어지는 것 같으니까.','괜찮아. 천천히 가도 돼. 내가 옆에서 같이 볼게.']],
+  [/안 ?들|들리지|귀|청력|소리가/, ()=>['다 들리지 않아도 괜찮아. 이 세계에서는 소리가 빛의 물결로 보이거든.','들리는 만큼, 보이는 만큼. 그걸로 충분히 길을 찾을 수 있어.']],
+  [/어떻게|뭐 ?해|뭘 ?해|뭘 하|뭐 하|할 일|다음|모르겠|힌트|도와|어디로|길/, ()=>[hint()]],
+  [/고마|땡큐|감사/, ()=>['나야말로. 네가 말을 걸어 줘서, 나도 더 또렷해졌어.']],
+  [/안녕|하이|반가/, ()=>['안녕! 내 말이 보이지? 다행이다.']],
+  [/구슬|오브/, ()=>['그 구슬은 소리를 만들어. 던지면 물결이 되고, 물결이 닿은 곳에서 무언가 대답해.']],
+];
+function reply(text){
+  AI.hush(); const s=text.replace(/\s+/g,' ');
+  for (const [re,fn] of INTENTS) if (re.test(s)){ AI.say(fn(),()=>chips(baseChips())); return; }
+  AI.say(['음… 그 말은 아직 잘 모르겠어. 그래도 들었어.','궁금한 게 있으면 "어떻게 해?" 하고 물어봐 줘.'],()=>chips(baseChips()));
+}
+const baseChips=()=>[{ label:'이제 뭘 하면 돼?' },{ label:'넌 누구야?' },{ label:'조금 무서워.' }];
+
+/* ---------- story beats from Chapter 1 ---------- */
+AI.event=function(name,arg){
+  if (!AI.awake && name!=='wake') return; AI.lastProgress=SV.t; AI.hinted=0;
+  if (name==='wake'){ AI.awake=true; body.visible=true; el('aiPnl').hidden=false; chips(baseChips()); pos.copy(SV.camera.position).add(V.set(-2.5,1.2,-4).applyQuaternion(SV.camera.quaternion));
+    AI.say(['…들려? 아, 내 목소리는 잘 들리지 않겠구나.','대신 이렇게 보여 줄게. 나는 메아리야.','궁금한 게 있으면 T를 누르고 말해 줘. 1·2·3으로 골라도 돼.'],()=>chips(baseChips())); }
+  else if (name==='found'){ const L={ 1:['방금 그거, 느꼈어? 누군가 너를 불렀던 목소리야.','소리는 사라진 게 아니었어. 두 개 더 남았어.'], 2:['색이 조금씩 돌아오고 있어. 숲이 숨을 쉬기 시작했어.','마지막 하나. 귀 기울이면(Q) 방향이 보여.'], 3:['다 모였어! 들려? 바람 소리, 물방울 소리…','이제 호수 건너 꽃이 부르고 있어.'] }[arg]; if (L) SV.later(()=>AI.say(L),2600); }
+  else if (name==='lake'){ SV.later(()=>AI.say('빛나는 돌만 밟을 수 있어. 물결을 만들어서 길을 보여 달라고 해 보자.'),7000); }
+  else if (name==='bloom'){ AI.hush(); SV.later(()=>AI.say(['잘했어. 정말로.','다음엔 공명의 동굴에서 기다릴게.']),3000); }
+};
+AI.reset=function(scene){
+  AI.hush(); AI.awake=false; AI.listening=false; try{ rec&&rec.abort(); }catch(_){}
+  body.visible=false; el('aiPnl').hidden=true; chips(null); showSay('',''); setStatus('곁에 있어요');
+  if (AI.scene!==scene){ if (AI.scene){ AI.scene.remove(body); vw.forEach(v=>AI.scene.remove(v.m)); } scene.add(body); vw.forEach(v=>scene.add(v.m)); AI.scene=scene; }
+  AI.lastProgress=SV.t; AI.hinted=0;
+};
+AI.stop=function(){ AI.hush(); AI.awake=false; try{ rec&&rec.abort(); }catch(_){} AI.listening=false; body.visible=false; el('aiPnl').hidden=true; };
+
+/* ---------- per frame: follow beside you (never in the middle of the view), glow while talking ---------- */
+let blinkT=2;
+AI.update=function(dt,t){
+  if (!AI.awake) return;
+  const cam=SV.camera; V.set(-2.3,.55,-4.6).applyQuaternion(cam.quaternion).add(cam.position); V.y=Math.max(V.y,.9);
+  pos.lerp(V,Math.min(1,dt*1.8)); body.position.copy(pos); body.position.y+=Math.sin(t*1.7)*.12; body.lookAt(cam.position);
+  AI.env=AI.speaking?lerp(AI.env||0,.45+.55*Math.abs(Math.sin(t*7.3)*Math.sin(t*2.1)),.35):lerp(AI.env||0,0,.2);
+  const s=1+AI.env*.25; core.scale.setScalar(s); shell.scale.setScalar(1+AI.env*.45); halo.material.opacity=.35+AI.env*.35; halo.scale.setScalar(1.2+AI.env*.8);
+  r1.rotation.z+=dt*(.8+AI.env*4); r2.rotation.z-=dt*(.6+AI.env*3);
+  blinkT-=dt; if (blinkT<0){ AI.blink=true; if (blinkT<-.12){ AI.blink=false; blinkT=2+Math.random()*3; } } eyes.scale.y=AI.blink?.1:1;
+  vwT-=dt; if (AI.speaking && vwT<=0){ vwT=.32; const v=vw[vwI++%vw.length]; v.t=0; v.m.visible=true; v.m.position.copy(body.position); v.m.lookAt(cam.position); }
+  vw.forEach(v=>{ if (v.t>=1){ v.m.visible=false; return; } v.t+=dt/1.2; v.m.scale.setScalar(.18+v.t*.85); v.m.material.opacity=(1-v.t)*.55; });
+  drawAvatar(t); drawWave(t);
+  // if you seem lost for a while, 메아리 offers a hint on its own
+  if (!AI.busy && !AI.listening && SV.t-AI.lastProgress>(AI.hinted?55:32) && SV.C1.phase!=='bloom'){ AI.lastProgress=SV.t; AI.hinted++; AI.say(['혹시 길을 잃었어?',hint()]); }
+};
 })();
 </script>
 <script>
