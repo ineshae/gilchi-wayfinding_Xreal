@@ -1319,7 +1319,7 @@ PADS.forEach(p=>{ for (let k=0;k<6;k++){ const a=k/6*6.28+rnd()*.4, d=2.2+rnd()*
 
 /* ---------- floating crystals, frozen petals, birds of light ---------- */
 const cryN=70, cryI=new T.InstancedMesh(new T.OctahedronGeometry(.6,0),SV.crystalMat(0xc9b6ff,.7,.6),cryN); const cry=[]; const o3=new T.Object3D();
-for (let i=0;i<cryN;i++){ const a=rnd()*6.28, d=16+rnd()*60; cry.push({ x:Math.cos(a)*d, y:-10+rnd()*36, z:Math.sin(a)*d, s:.4+rnd()*1.3, r:rnd()*6, sp:.3+rnd() }); } scene.add(cryI);
+for (let i=0;i<cryN;i++){ let x,y,z,n=0; do { const a=rnd()*6.28, d=16+rnd()*60; x=Math.cos(a)*d; y=-10+rnd()*36; z=Math.sin(a)*d; } while (Math.hypot(x,y-7,z-52)<16 && ++n<20); cry.push({ x, y, z, s:.4+rnd()*1.3, r:rnd()*6, sp:.3+rnd() }); } scene.add(cryI);
 const PN=700, pgeo=new T.BufferGeometry(), pa=new Float32Array(PN*3); for (let i=0;i<PN;i++){ const a=rnd()*6.28, d=rnd()*70; pa[i*3]=Math.cos(a)*d; pa[i*3+1]=-12+rnd()*40; pa[i*3+2]=Math.sin(a)*d; } pgeo.setAttribute('position',new T.BufferAttribute(pa,3));
 const petalsP=new T.Points(pgeo,new T.PointsMaterial({ map:SV.glowTex, color:0xffc8e8, size:.55, transparent:true, opacity:.8, blending:T.AdditiveBlending, depthWrite:false })); scene.add(petalsP);
 const BN=30, bgeo=new T.BufferGeometry(), ba=new Float32Array(BN*3); bgeo.setAttribute('position',new T.BufferAttribute(ba,3));
