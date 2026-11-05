@@ -1027,16 +1027,17 @@ function chips(list){ AI.chips=list||null; const box=el('aiChips'); box.innerHTM
 
 /* ---------- speaking: subtitles + TTS + visible voice ---------- */
 const synth=window.speechSynthesis||null; let koVoice=null;
-function findVoice(){ if (!synth) return; const vs=synth.getVoices(); koVoice=vs.find(v=>/^ko/i.test(v.lang)&&/google/i.test(v.name))||vs.find(v=>/^ko/i.test(v.lang))||null; }
+function findVoice(){ if (!synth) return; const vs=synth.getVoices(); const ko=vs.filter(v=>/^ko/i.test(v.lang)); koVoice=ko.find(v=>/natural|online/i.test(v.name))||ko.find(v=>/google/i.test(v.name))||ko.find(v=>/yuna|sunhi|heami/i.test(v.name))||ko[0]||null; }
 if (synth){ findVoice(); synth.onvoiceschanged=findVoice; }
 const plain=s=>s.replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'');
 function speakNow(line,done,tok){
   AI.speaking=true; AI.env=0; setStatus('말하는 중'); showSay(line);
   const dur=Math.max(2200,plain(line).length*120);
   let finished=false; const end=()=>{ if (finished) return; finished=true; if (tok!==undefined && tok!==AI.tok) return; AI.speaking=false; setStatus(AI.listening?'듣는 중':'곁에 있어요'); done&&done(); };
-  if (synth && AI.voiceOn && (koVoice || synth.getVoices().length===0)){ try{ synth.cancel(); const u=new SpeechSynthesisUtterance(plain(line)); u.lang='ko-KR'; if (koVoice) u.voice=koVoice; u.rate=1.02; u.pitch=1.35; u.volume=.95; u.onend=()=>setTimeout(end,250); synth.speak(u); }catch(_){} }
+  if (synth && AI.voiceOn && (koVoice || synth.getVoices().length===0)){ try{ synth.cancel(); const u=new SpeechSynthesisUtterance(plain(line)); u.lang='ko-KR'; if (koVoice) u.voice=koVoice; u.rate=.98; u.pitch=1.05; u.volume=.95; u.onend=()=>setTimeout(end,250); synth.speak(u); }catch(_){} }
   setTimeout(end,dur+1800); // never wait forever for the voice
 }
+AI.note=function(text){ AI.hush(); setStatus('곁에 있어요'); showSay('<span style="color:var(--muted)">'+text+'</span>'); };
 AI.say=function(lines,then){ AI.q.push({ lines:[].concat(lines), then }); if (!AI.busy) next(); };
 AI.tok=0;
 function next(){ const it=AI.q.shift(); if (!it){ AI.busy=false; return; } AI.busy=true; let i=0; const tok=AI.tok;
@@ -1047,13 +1048,13 @@ AI.hush=function(){ AI.tok++; AI.q.length=0; AI.busy=false; AI.speaking=false; i
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition; let rec=null;
 function listen(){
   if (!AI.awake || AI.listening) return;
-  if (!SR){ AI.say('이 브라우저에서는 목소리를 받아 적을 수 없어. 대신 1·2·3으로 골라 줘.'); return; }
+  if (!SR){ AI.note('이 브라우저에서는 목소리를 받아 적을 수 없어요. 1·2·3으로 골라 주세요.'); return; }
   AI.hush(); AI.listening=true; setStatus('듣는 중'); showSay('<span style="color:var(--mint)">듣고 있어… 천천히 말해 줘.</span>','…');
   try{ rec=new SR(); rec.lang='ko-KR'; rec.interimResults=true; rec.maxAlternatives=1; let final='';
     rec.onresult=e=>{ let s=''; for (let i=0;i<e.results.length;i++){ s+=e.results[i][0].transcript; if (e.results[i].isFinal) final=s; } el('aiMe').textContent='나: '+s; };
-    rec.onerror=e=>{ AI.listening=false; setStatus('곁에 있어요'); AI.say(e.error==='not-allowed'||e.error==='service-not-allowed'?'마이크를 쓸 수 없어. 대신 1·2·3으로 골라 줘.':'잘 못 알아들었어. 한 번만 더 말해 줄래? (T)'); };
-    rec.onend=()=>{ if (!AI.listening) return; AI.listening=false; const s=final||el('aiMe').textContent.replace(/^나:\s*/,''); if (s && s!=='…') reply(s); else { setStatus('곁에 있어요'); AI.say('아무 소리도 안 보였어. 다시 말해 줄래? (T)'); } };
-    rec.start(); }catch(_){ AI.listening=false; AI.say('목소리를 받아 적을 수 없어. 대신 1·2·3으로 골라 줘.'); }
+    rec.onerror=e=>{ AI.listening=false; setStatus('곁에 있어요'); AI.note(e.error==='not-allowed'||e.error==='service-not-allowed'?'마이크를 쓸 수 없어요. 1·2·3으로 골라 주세요.':'잘 알아듣지 못했어요. T를 누르고 다시 말해 주세요.'); };
+    rec.onend=()=>{ if (!AI.listening) return; AI.listening=false; const s=final||el('aiMe').textContent.replace(/^나:\s*/,''); if (s && s!=='…') reply(s); else { setStatus('곁에 있어요'); AI.note('아무 말도 들리지 않았어요. T를 누르고 다시 말해 주세요.'); } };
+    rec.start(); }catch(_){ AI.listening=false; AI.note('목소리를 받아 적을 수 없어요. 1·2·3으로 골라 주세요.'); }
 }
 function pick(i){ const c=AI.chips&&AI.chips[i]; if (!c) return; el('aiMe').textContent='나: '+c.label; reply(c.say||c.label); }
 addEventListener('keydown',e=>{
@@ -1093,12 +1094,9 @@ const baseChips=()=>[{ label:'이제 뭘 하면 돼?' },{ label:'넌 누구야?'
 
 /* ---------- story beats from Chapter 1 ---------- */
 AI.event=function(name,arg){
-  if (!AI.awake && name!=='wake') return; AI.lastProgress=SV.t; AI.hinted=0;
-  if (name==='wake'){ AI.awake=true; el('aiPnl').hidden=false; chips(baseChips()); pos.copy(SV.camera.position).add(V.set(-2.5,1.2,-4).applyQuaternion(SV.camera.quaternion));
-    AI.say(['…들려? 아, 내 목소리는 잘 들리지 않겠구나.','대신 이렇게 보여 줄게. 나는 메아리, 네 손에 쥔 구슬 속 목소리야.','궁금한 게 있으면 T를 누르고 말해 줘. 1·2·3으로 골라도 돼.'],()=>chips(baseChips())); }
-  else if (name==='found'){ const L={ 1:['방금 그거, 느꼈어? 누군가 너를 불렀던 목소리야.','소리는 사라진 게 아니었어. 두 개 더 남았어.'], 2:['색이 조금씩 돌아오고 있어. 숲이 숨을 쉬기 시작했어.','마지막 하나. 귀 기울이면(Q) 방향이 보여.'], 3:['다 모였어! 들려? 바람 소리, 물방울 소리…','이제 호수 건너 꽃이 부르고 있어.'] }[arg]; if (L) SV.later(()=>AI.say(L),2600); }
-  else if (name==='lake'){ SV.later(()=>AI.say('빛나는 돌만 밟을 수 있어. 물결을 만들어서 길을 보여 달라고 해 보자.'),7000); }
-  else if (name==='bloom'){ AI.hush(); SV.later(()=>AI.say(['잘했어. 정말로.','다음엔 공명의 동굴에서 기다릴게.']),3000); }
+  // 메아리 only speaks when you talk to it; story beats never make it speak on its own
+  if (name==='wake'){ AI.awake=true; el('aiPnl').hidden=false; chips(baseChips()); AI.note('메아리가 구슬 속에서 듣고 있어요. 궁금한 게 있으면 T를 누르고 말을 걸거나 1·2·3을 골라 보세요.'); }
+  else if (name==='bloom'){ AI.hush(); }
 };
 AI.reset=function(scene){
   AI.hush(); AI.awake=false; AI.listening=false; try{ rec&&rec.abort(); }catch(_){}
@@ -1120,8 +1118,6 @@ AI.update=function(dt,t){
   vwT-=dt; if (AI.speaking && vwT<=0 && SV.orb.state==='held'){ vwT=.32; const v=vw[vwI++%vw.length]; v.t=0; v.m.visible=true; v.m.position.copy(pos); v.m.lookAt(cam.position); }
   vw.forEach(v=>{ if (v.t>=1){ v.m.visible=false; return; } v.t+=dt/1.2; v.m.scale.setScalar(.06+v.t*.22); v.m.material.opacity=(1-v.t)*.4; });
   drawAvatar(t); drawWave(t);
-  // if you seem lost for a while, 메아리 offers a hint on its own
-  if (!AI.busy && !AI.listening && SV.t-AI.lastProgress>(AI.hinted?55:32) && SV.C1.phase!=='bloom'){ AI.lastProgress=SV.t; AI.hinted++; AI.say(['혹시 길을 잃었어?',hint()]); }
 };
 })();
 </script>
