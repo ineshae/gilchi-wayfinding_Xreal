@@ -176,7 +176,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   <div class="keys" id="keys"><kbd>W A S D</kbd> 걷기 · <kbd>마우스</kbd> 둘러보기<br><kbd>클릭</kbd> 잡기 · 두드리기 · <kbd>꾹 눌렀다 떼기</kbd> 던지기<br><kbd>우클릭</kbd>/<kbd>Q</kbd> 귀 기울이기 · <kbd>휠</kbd> 음높이 · <kbd>Esc</kbd> 마우스 풀기</div>
   <div class="side">
     <div class="pnl ai" id="aiPnl" hidden>
-      <div class="ai-hd"><canvas id="aiAv" width="112" height="112" aria-hidden="true"></canvas><div><b>메아리</b><small>AI 동반자 · 프로토타입</small></div><span class="ai-st" id="aiState">곁에 있어요</span></div>
+      <div class="ai-hd"><canvas id="aiAv" width="112" height="112" aria-hidden="true"></canvas><div><b>메아리</b><small>소리 구슬 속 목소리 · 프로토타입</small></div><span class="ai-st" id="aiState">곁에 있어요</span></div>
       <canvas id="aiWave" width="660" height="70" aria-hidden="true"></canvas>
       <div class="ai-say" id="aiSay" aria-live="polite"></div>
       <div class="ai-me" id="aiMe"></div>
@@ -1011,10 +1011,8 @@ const av=el('aiAv'), ag=av.getContext('2d');
 function drawAvatar(t){
   const w=av.width, h=av.height; ag.clearRect(0,0,w,h); const cx=w/2, cy=h/2;
   const g=ag.createRadialGradient(cx,cy,2,cx,cy,w*.48); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(.35,'rgba(170,230,255,.75)'); g.addColorStop(1,'rgba(120,140,255,0)'); ag.fillStyle=g; ag.beginPath(); ag.arc(cx,cy,w*.48,0,7); ag.fill();
-  ag.fillStyle='#1b2450'; [-1,1].forEach(s=>{ ag.beginPath(); ag.ellipse(cx+s*w*.11,cy-2,w*.035,h*(AI.blink?0.008:.07),0,0,7); ag.fill(); });
-  if (AI.speaking){ ag.strokeStyle='rgba(255,255,255,.95)'; ag.lineWidth=3; ag.beginPath(); for (let x=-w*.14;x<=w*.14;x+=2){ const y=cy+h*.15+Math.sin(x*.4+t*22)*h*.035*AI.env; x===-w*.14?ag.moveTo(cx+x,y):ag.lineTo(cx+x,y); } ag.stroke(); }
-  else { ag.strokeStyle='#1b2450'; ag.lineWidth=3; ag.beginPath(); ag.arc(cx,cy+h*.1,w*.05,.3,Math.PI-.3); ag.stroke(); }
-  ['rgba(255,159,216,.9)','rgba(143,243,255,.9)'].forEach((c,i)=>{ ag.strokeStyle=c; ag.lineWidth=2; ag.beginPath(); ag.ellipse(cx,cy,w*(.42+i*.04),h*(.14+i*.05),t*(i?-.6:.8),0,7); ag.stroke(); });
+  const pr=w*(.12+.05*(AI.env||0)); ag.fillStyle='#fff'; ag.beginPath(); ag.arc(cx,cy,pr,0,7); ag.fill();
+  ag.strokeStyle='rgba(255,159,216,.95)'; ag.lineWidth=3; ag.beginPath(); ag.ellipse(cx,cy,w*.4,h*.13,-.35,0,7); ag.stroke();
 }
 const wv=el('aiWave'), wg=wv.getContext('2d');
 function drawWave(t){
@@ -1077,7 +1075,7 @@ function hint(){
   return '조금만 더 둘러보자. 소리는 퍼져 나가니까, 방향을 따라가면 닿을 수 있어.';
 }
 const INTENTS=[
-  [/누구|이름|정체|너는|넌/, ()=>['나는 메아리. 네가 잃어버린 소리들이 머물던 곳에서 왔어.','네 목소리가 처음 울렸을 때 생겨났어. 그러니까… 조금은 너의 일부야.']],
+  [/누구|이름|정체|너는|넌/, ()=>['나는 메아리. 네가 쥔 소리 구슬 속에 있는 목소리야.','네가 잃어버린 소리들이 머물던 곳에서 왔어. 그러니까… 조금은 너의 일부야.']],
   [/어디|여기|무슨 곳|장소/, ()=>['여긴 침묵의 숲. 소리가 사라지면서 색도, 움직임도 멈춰 버린 곳이야.','하지만 사라진 건 아니야. 숨어 있을 뿐이야.']],
   [/무서|두려|겁|불안|싫어/, ()=>['무서운 게 당연해. 소리가 멀어지면 세상도 멀어지는 것 같으니까.','괜찮아. 천천히 가도 돼. 내가 옆에서 같이 볼게.']],
   [/안 ?들|들리지|귀|청력|소리가/, ()=>['다 들리지 않아도 괜찮아. 이 세계에서는 소리가 빛의 물결로 보이거든.','들리는 만큼, 보이는 만큼. 그걸로 충분히 길을 찾을 수 있어.']],
@@ -1096,8 +1094,8 @@ const baseChips=()=>[{ label:'이제 뭘 하면 돼?' },{ label:'넌 누구야?'
 /* ---------- story beats from Chapter 1 ---------- */
 AI.event=function(name,arg){
   if (!AI.awake && name!=='wake') return; AI.lastProgress=SV.t; AI.hinted=0;
-  if (name==='wake'){ AI.awake=true; body.visible=true; el('aiPnl').hidden=false; chips(baseChips()); pos.copy(SV.camera.position).add(V.set(-2.5,1.2,-4).applyQuaternion(SV.camera.quaternion));
-    AI.say(['…들려? 아, 내 목소리는 잘 들리지 않겠구나.','대신 이렇게 보여 줄게. 나는 메아리야.','궁금한 게 있으면 T를 누르고 말해 줘. 1·2·3으로 골라도 돼.'],()=>chips(baseChips())); }
+  if (name==='wake'){ AI.awake=true; el('aiPnl').hidden=false; chips(baseChips()); pos.copy(SV.camera.position).add(V.set(-2.5,1.2,-4).applyQuaternion(SV.camera.quaternion));
+    AI.say(['…들려? 아, 내 목소리는 잘 들리지 않겠구나.','대신 이렇게 보여 줄게. 나는 메아리, 네 손에 쥔 구슬 속 목소리야.','궁금한 게 있으면 T를 누르고 말해 줘. 1·2·3으로 골라도 돼.'],()=>chips(baseChips())); }
   else if (name==='found'){ const L={ 1:['방금 그거, 느꼈어? 누군가 너를 불렀던 목소리야.','소리는 사라진 게 아니었어. 두 개 더 남았어.'], 2:['색이 조금씩 돌아오고 있어. 숲이 숨을 쉬기 시작했어.','마지막 하나. 귀 기울이면(Q) 방향이 보여.'], 3:['다 모였어! 들려? 바람 소리, 물방울 소리…','이제 호수 건너 꽃이 부르고 있어.'] }[arg]; if (L) SV.later(()=>AI.say(L),2600); }
   else if (name==='lake'){ SV.later(()=>AI.say('빛나는 돌만 밟을 수 있어. 물결을 만들어서 길을 보여 달라고 해 보자.'),7000); }
   else if (name==='bloom'){ AI.hush(); SV.later(()=>AI.say(['잘했어. 정말로.','다음엔 공명의 동굴에서 기다릴게.']),3000); }
@@ -1105,7 +1103,7 @@ AI.event=function(name,arg){
 AI.reset=function(scene){
   AI.hush(); AI.awake=false; AI.listening=false; try{ rec&&rec.abort(); }catch(_){}
   body.visible=false; el('aiPnl').hidden=true; chips(null); showSay('',''); setStatus('곁에 있어요');
-  if (AI.scene!==scene){ if (AI.scene){ AI.scene.remove(body); vw.forEach(v=>AI.scene.remove(v.m)); } scene.add(body); vw.forEach(v=>scene.add(v.m)); AI.scene=scene; }
+  if (AI.scene!==scene){ if (AI.scene){ vw.forEach(v=>AI.scene.remove(v.m)); } vw.forEach(v=>scene.add(v.m)); AI.scene=scene; }
   AI.lastProgress=SV.t; AI.hinted=0;
 };
 AI.stop=function(){ AI.hush(); AI.awake=false; try{ rec&&rec.abort(); }catch(_){} AI.listening=false; body.visible=false; el('aiPnl').hidden=true; };
@@ -1114,14 +1112,13 @@ AI.stop=function(){ AI.hush(); AI.awake=false; try{ rec&&rec.abort(); }catch(_){
 let blinkT=2;
 AI.update=function(dt,t){
   if (!AI.awake) return;
-  const cam=SV.camera; V.set(-2.3,.55,-4.6).applyQuaternion(cam.quaternion).add(cam.position); V.y=Math.max(V.y,.9);
-  pos.lerp(V,Math.min(1,dt*1.8)); body.position.copy(pos); body.position.y+=Math.sin(t*1.7)*.12; body.lookAt(cam.position);
+  const cam=SV.camera, om=SV.orb.mesh, here=om.visible;
+  if (here) pos.copy(om.position); else pos.set(.34,-.29,-.95).applyQuaternion(cam.quaternion).add(cam.position);
   AI.env=AI.speaking?lerp(AI.env||0,.45+.55*Math.abs(Math.sin(t*7.3)*Math.sin(t*2.1)),.35):lerp(AI.env||0,0,.2);
-  const s=1+AI.env*.25; core.scale.setScalar(s); shell.scale.setScalar(1+AI.env*.45); halo.material.opacity=.35+AI.env*.35; halo.scale.setScalar(1.2+AI.env*.8);
-  r1.rotation.z+=dt*(.8+AI.env*4); r2.rotation.z-=dt*(.6+AI.env*3);
-  blinkT-=dt; if (blinkT<0){ AI.blink=true; if (blinkT<-.12){ AI.blink=false; blinkT=2+Math.random()*3; } } eyes.scale.y=AI.blink?.1:1;
-  vwT-=dt; if (AI.speaking && vwT<=0){ vwT=.32; const v=vw[vwI++%vw.length]; v.t=0; v.m.visible=true; v.m.position.copy(body.position); v.m.lookAt(cam.position); }
-  vw.forEach(v=>{ if (v.t>=1){ v.m.visible=false; return; } v.t+=dt/1.2; v.m.scale.setScalar(.18+v.t*.85); v.m.material.opacity=(1-v.t)*.55; });
+  // the orb in your hand glows and swells as 메아리 speaks from inside it
+  if (here && AI.env>.01){ om.scale.multiplyScalar(1+AI.env*.22); const u=om.userData; if (u.halo) u.halo.material.opacity=Math.min(1,u.halo.material.opacity+AI.env*.4); if (u.ring) u.ring.rotation.z+=dt*AI.env*5; }
+  vwT-=dt; if (AI.speaking && vwT<=0){ vwT=.32; const v=vw[vwI++%vw.length]; v.t=0; v.m.visible=true; v.m.position.copy(pos); v.m.lookAt(cam.position); }
+  vw.forEach(v=>{ if (v.t>=1){ v.m.visible=false; return; } v.t+=dt/1.2; v.m.scale.setScalar(.06+v.t*.22); v.m.material.opacity=(1-v.t)*.4; });
   drawAvatar(t); drawWave(t);
   // if you seem lost for a while, 메아리 offers a hint on its own
   if (!AI.busy && !AI.listening && SV.t-AI.lastProgress>(AI.hinted?55:32) && SV.C1.phase!=='bloom'){ AI.lastProgress=SV.t; AI.hinted++; AI.say(['혹시 길을 잃었어?',hint()]); }
