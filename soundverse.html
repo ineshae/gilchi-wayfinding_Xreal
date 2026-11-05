@@ -76,6 +76,14 @@ button{font:inherit;color:inherit;cursor:pointer}
 .aichip:hover{background:rgba(255,255,255,.12)}
 .aichip kbd,.ai-ft kbd{font:700 10.5px/1 var(--body);padding:2px 5px;border-radius:4px;border:1px solid var(--edge-2)}
 .ai-ft{display:flex;gap:10px;flex-wrap:wrap;margin-top:9px;font-size:11.5px;color:var(--muted)}
+.side{bottom:calc(max(16px,env(safe-area-inset-bottom)) + 42px)}
+.side.off{display:none}
+.sidetog{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));pointer-events:auto;display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;border:1px solid var(--edge-2);background:rgba(10,10,24,.62);color:var(--ink);font:700 12.5px/1 var(--body);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.sidetog:hover{background:rgba(60,50,110,.75)}
+.sidetog kbd{font:700 10.5px/1 var(--body);padding:2px 5px;border-radius:4px;border:1px solid var(--edge-2)}
+.talkdot{display:none;width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:tdot 1s ease-in-out infinite}
+.sidetog.talk .talkdot{display:inline-block}
+@keyframes tdot{50%{opacity:.3}}
 /* ---------- overlays ---------- */
 .ov{position:fixed;inset:0;display:grid;place-items:center;padding:24px;overflow:auto;-webkit-user-select:text;user-select:text}
 .title{background:radial-gradient(900px 600px at 50% 40%,rgba(120,100,255,.18),transparent 70%),radial-gradient(700px 500px at 70% 80%,rgba(255,120,200,.10),transparent 70%),rgba(4,4,10,.72)}
@@ -174,14 +182,15 @@ button{font:inherit;color:inherit;cursor:pointer}
   <div class="mem" id="mem"></div>
   <canvas id="compass" width="520" height="172" aria-label="소리 나침반: 소리가 들린 방향이 빛으로 표시돼요"></canvas>
   <div class="keys" id="keys"><kbd>W A S D</kbd> 걷기 · <kbd>마우스</kbd> 둘러보기<br><kbd>클릭</kbd> 잡기 · 두드리기 · <kbd>꾹 눌렀다 떼기</kbd> 던지기<br><kbd>우클릭</kbd>/<kbd>Q</kbd> 귀 기울이기 · <kbd>휠</kbd> 음높이 · <kbd>Esc</kbd> 마우스 풀기</div>
-  <div class="side">
+  <button class="sidetog" id="sideTog" type="button" hidden aria-pressed="false"><span id="sideTogT">▾ 패널 숨기기</span> <kbd>H</kbd><i class="talkdot" id="talkDot"></i></button>
+  <div class="side" id="side">
     <div class="pnl ai" id="aiPnl" hidden>
       <div class="ai-hd"><canvas id="aiAv" width="112" height="112" aria-hidden="true"></canvas><div><b>메아리</b><small>소리 구슬 속 목소리 · 프로토타입</small></div><span class="ai-st" id="aiState">곁에 있어요</span></div>
       <canvas id="aiWave" width="660" height="70" aria-hidden="true"></canvas>
       <div class="ai-say" id="aiSay" aria-live="polite"></div>
       <div class="ai-me" id="aiMe"></div>
       <div class="ai-chips" id="aiChips"></div>
-      <div class="ai-ft"><span><kbd>T</kbd> 말 걸기</span><span><kbd>1</kbd>~<kbd>3</kbd> 빠른 대답</span><span id="aiVoice">V 음성 끄기</span></div>
+      <div class="ai-ft"><span><kbd>T</kbd> 말 걸기</span><span><kbd>1</kbd>~<kbd>3</kbd> 빠른 대답</span><span id="aiVoice">V 음성 끄기</span><span><kbd>H</kbd> 패널 숨기기</span></div>
     </div>
     <div class="pnl" id="wavePnl" hidden><div class="lb">공명 맞추기 <b id="waveHz"></b></div><canvas id="wave" width="600" height="240"></canvas></div>
     <div class="pnl" id="mixPnl" hidden><div class="lb">음악의 구성 · 소리의 조화 <b id="mixN"></b></div><canvas id="mix" width="660" height="472"></canvas></div>
@@ -1812,6 +1821,13 @@ SV.goTitle=goTitle;
 el('backBtn').onclick=goTitle;
 el('endBackBtn').onclick=goTitle;
 addEventListener('keydown',e=>{ if (e.code==='Backspace' && SV.playing){ e.preventDefault(); goTitle(); } });
+/* the panels in the lower right (메아리 · 공명/음높이 · 음악의 구성) can be hidden and shown again: H or the button */
+let sideOff=false; try{ sideOff=localStorage.getItem('soundverse.sideOff')==='1'; }catch(_){}
+function applySide(){ el('side').classList.toggle('off',sideOff); el('sideTogT').textContent=sideOff?'▴ 패널 보이기':'▾ 패널 숨기기'; el('sideTog').setAttribute('aria-pressed',sideOff?'true':'false'); }
+function toggleSide(){ sideOff=!sideOff; try{ localStorage.setItem('soundverse.sideOff',sideOff?'1':'0'); }catch(_){} applySide(); }
+el('sideTog').onclick=toggleSide; applySide();
+addEventListener('keydown',e=>{ if (e.code==='KeyH' && SV.playing && !e.repeat) toggleSide(); });
+(function sideWatch(){ const any=[...el('side').children].some(c=>!c.hidden); el('sideTog').hidden=!any; el('sideTog').classList.toggle('talk',sideOff && !!(SV.AI&&SV.AI.speaking)); setTimeout(sideWatch,250); })();
 el('keepBtn').onclick=()=>{ el('end').hidden=true; el('hud').hidden=false; SV.playing=true; P.frozen=false; lock(); };
 
 /* title backdrop: the silent forest, slowly turning */
