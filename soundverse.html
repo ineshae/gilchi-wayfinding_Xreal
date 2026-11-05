@@ -84,6 +84,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .talkdot{display:none;width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:tdot 1s ease-in-out infinite}
 .sidetog.talk .talkdot{display:inline-block}
 @keyframes tdot{50%{opacity:.3}}
+.ai-vsel{display:inline-flex;align-items:center;gap:5px}
+.ai-vsel select{max-width:150px;padding:3px 6px;border-radius:6px;border:1px solid var(--edge-2);background:#14142a;color:var(--ink);font:500 11.5px/1.2 var(--body)}
 /* ---------- overlays ---------- */
 .ov{position:fixed;inset:0;display:grid;place-items:center;padding:24px;overflow:auto;-webkit-user-select:text;user-select:text}
 .title{background:radial-gradient(900px 600px at 50% 40%,rgba(120,100,255,.18),transparent 70%),radial-gradient(700px 500px at 70% 80%,rgba(255,120,200,.10),transparent 70%),rgba(4,4,10,.72)}
@@ -190,7 +192,7 @@ button{font:inherit;color:inherit;cursor:pointer}
       <div class="ai-say" id="aiSay" aria-live="polite"></div>
       <div class="ai-me" id="aiMe"></div>
       <div class="ai-chips" id="aiChips"></div>
-      <div class="ai-ft"><span><kbd>T</kbd> 말 걸기</span><span><kbd>1</kbd>~<kbd>3</kbd> 빠른 대답</span><span id="aiVoice">V 음성 끄기</span><span><kbd>H</kbd> 패널 숨기기</span></div>
+      <div class="ai-ft"><span><kbd>T</kbd> 말 걸기</span><span><kbd>1</kbd>~<kbd>3</kbd> 빠른 대답</span><span id="aiVoice">V 음성 끄기</span><label class="ai-vsel">목소리 <select id="aiVoiceSel" aria-label="메아리 목소리 고르기"></select></label><span><kbd>H</kbd> 패널 숨기기</span></div>
     </div>
     <div class="pnl" id="wavePnl" hidden><div class="lb">공명 맞추기 <b id="waveHz"></b></div><canvas id="wave" width="600" height="240"></canvas></div>
     <div class="pnl" id="mixPnl" hidden><div class="lb">음악의 구성 · 소리의 조화 <b id="mixN"></b></div><canvas id="mix" width="660" height="472"></canvas></div>
@@ -1026,22 +1028,38 @@ function showSay(text,me){ el('aiSay').innerHTML=text; if (me!=null) el('aiMe').
 function chips(list){ AI.chips=list||null; const box=el('aiChips'); box.innerHTML=''; (list||[]).forEach((c,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='aichip'; b.innerHTML='<kbd>'+(i+1)+'</kbd> '+c.label; b.onclick=()=>pick(i); box.appendChild(b); }); }
 
 /* ---------- speaking: subtitles + TTS + visible voice ---------- */
-const synth=window.speechSynthesis||null; let koVoice=null;
-function findVoice(){ if (!synth) return; const vs=synth.getVoices(); const ko=vs.filter(v=>/^ko/i.test(v.lang)); koVoice=ko.find(v=>/natural|online/i.test(v.name))||ko.find(v=>/google/i.test(v.name))||ko.find(v=>/yuna|sunhi|heami/i.test(v.name))||ko[0]||null; }
-if (synth){ findVoice(); synth.onvoiceschanged=findVoice; }
+const synth=window.speechSynthesis||null; let koVoices=[], koVoice=null;
+// the most natural Korean voice this browser has: neural/online voices first (Edge "SunHi Online (Natural)", Chrome "Google 한국의")
+const vScore=v=>(/natural|neural/i.test(v.name)?6:0)+(/online/i.test(v.name)?3:0)+(/google/i.test(v.name)?2:0)+(/sunhi|injoon|yuna|seoyeon|heami/i.test(v.name)?1:0)+(v.localService?0:1);
+const vLabel=v=>v.name.replace(/^Microsoft\s+/,'').replace(/\s*-\s*Korean.*$/,'').replace(/\(Korea\)|Korean/gi,'').trim()||v.name;
+function findVoice(){ if (!synth) return; const vs=synth.getVoices(); if (!vs.length) return;
+  koVoices=vs.filter(v=>/^ko/i.test(v.lang)).sort((a,b)=>vScore(b)-vScore(a));
+  let saved=''; try{ saved=localStorage.getItem('soundverse.voice')||''; }catch(_){}
+  koVoice=koVoices.find(v=>v.name===saved)||koVoices[0]||null; fillVoices(); }
+function fillVoices(){ const sel=el('aiVoiceSel'); if (!sel) return; sel.innerHTML='';
+  if (!koVoices.length){ const o=document.createElement('option'); o.textContent='한국어 음성 없음 · 자막만'; sel.appendChild(o); sel.disabled=true; return; }
+  sel.disabled=false; koVoices.forEach((v,i)=>{ const o=document.createElement('option'); o.value=v.name; o.textContent=(i===0?'★ ':'')+vLabel(v); if (v===koVoice) o.selected=true; sel.appendChild(o); }); }
+function setVoice(v,sample){ koVoice=v; try{ localStorage.setItem('soundverse.voice',v.name); }catch(_){} fillVoices(); if (sample && AI.awake){ AI.hush(); AI.say('이 목소리로 말할게.'); } }
+if (synth){ findVoice(); synth.onvoiceschanged=findVoice; setTimeout(findVoice,600); setTimeout(()=>{ findVoice(); if (!koVoices.length) fillVoices(); },2000); }
+else setTimeout(fillVoices,0);
+el('aiVoiceSel').addEventListener('change',e=>{ const v=koVoices.find(x=>x.name===e.target.value); if (v) setVoice(v,true); });
+AI.nextVoice=()=>{ if (koVoices.length<2) return; const i=(koVoices.indexOf(koVoice)+1)%koVoices.length; setVoice(koVoices[i],true); };
 const plain=s=>s.replace(/<br\s*\/?>/g,' ').replace(/<[^>]+>/g,'');
+// what the voice actually reads: no ellipses, quotes, brackets or symbols that synthesizers stumble on
+const speechText=s=>plain(s).replace(/…+/g,', ').replace(/[“”"'‘’]/g,'').replace(/\([^)]*\)/g,'').replace(/1·2·3/g,'일, 이, 삼').replace(/\bT를/g,'티를').replace(/·/g,', ').replace(/\s*,\s*,/g,',').replace(/\s+/g,' ').replace(/^[,.\s]+/,'').trim();
 function speakNow(line,done,tok){
   AI.speaking=true; AI.env=0; setStatus('말하는 중'); showSay(line);
-  const dur=Math.max(2200,plain(line).length*120);
+  const dur=Math.max(2200,plain(line).length*140);
   let finished=false; const end=()=>{ if (finished) return; finished=true; if (tok!==undefined && tok!==AI.tok) return; AI.speaking=false; setStatus(AI.listening?'듣는 중':'곁에 있어요'); done&&done(); };
-  if (synth && AI.voiceOn && (koVoice || synth.getVoices().length===0)){ try{ synth.cancel(); const u=new SpeechSynthesisUtterance(plain(line)); u.lang='ko-KR'; if (koVoice) u.voice=koVoice; u.rate=.98; u.pitch=1.05; u.volume=.95; u.onend=()=>setTimeout(end,250); synth.speak(u); }catch(_){} }
+  if (synth && AI.voiceOn && koVoice){ try{ const u=new SpeechSynthesisUtterance(speechText(line)); u.lang=koVoice.lang||'ko-KR'; u.voice=koVoice;
+      const neural=vScore(koVoice)>=3; u.rate=neural?1.0:.94; u.pitch=1.0; u.volume=1; u.onend=()=>setTimeout(end,120); synth.speak(u); }catch(_){} }
   setTimeout(end,dur+1800); // never wait forever for the voice
 }
 AI.note=function(text){ AI.hush(); setStatus('곁에 있어요'); showSay('<span style="color:var(--muted)">'+text+'</span>'); };
 AI.say=function(lines,then){ AI.q.push({ lines:[].concat(lines), then }); if (!AI.busy) next(); };
 AI.tok=0;
 function next(){ const it=AI.q.shift(); if (!it){ AI.busy=false; return; } AI.busy=true; let i=0; const tok=AI.tok;
-  const step=()=>{ if (tok!==AI.tok) return; if (i>=it.lines.length){ it.then&&it.then(); next(); return; } speakNow(it.lines[i++],()=>setTimeout(step,350),tok); }; step(); }
+  const step=()=>{ if (tok!==AI.tok) return; if (i>=it.lines.length){ it.then&&it.then(); next(); return; } speakNow(it.lines[i++],()=>setTimeout(step,180),tok); }; step(); }
 AI.hush=function(){ AI.tok++; AI.q.length=0; AI.busy=false; AI.speaking=false; if (synth) try{ synth.cancel(); }catch(_){} };
 
 /* ---------- listening: T = speak (browser speech recognition), 1·2·3 = quick replies ---------- */
@@ -1060,6 +1078,7 @@ function pick(i){ const c=AI.chips&&AI.chips[i]; if (!c) return; el('aiMe').text
 addEventListener('keydown',e=>{
   if (!SV.playing || !AI.awake || SV.chapter!==SV.C1) return;
   if (e.code==='KeyT' && !e.repeat){ e.preventDefault(); listen(); }
+  else if (e.code==='KeyN' && !e.repeat){ AI.nextVoice(); }
   else if (e.code==='KeyV' && !e.repeat){ AI.voiceOn=!AI.voiceOn; if (!AI.voiceOn) synth&&synth.cancel(); el('aiVoice').textContent=AI.voiceOn?'V 음성 끄기':'V 음성 켜기'; }
   else { const m=/^Digit([1-3])$/.exec(e.code); if (m) pick(+m[1]-1); }
 });
